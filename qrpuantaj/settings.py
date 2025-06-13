@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-hph8+mw0l#56x-&)p%8)08ptk4!fkws3%8el)h7(vkc!c*mr9k
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']  # Geliştirme aşamasında tüm hostlara izin veriyoruz, üretimde bunu kısıtlamalısınız.
 
 
 # Application definition
@@ -57,7 +57,7 @@ ROOT_URLCONF = 'qrpuantaj.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

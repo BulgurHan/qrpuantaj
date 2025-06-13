@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>QR Test</title>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+  </head>
+  <body>
+    <h1>QR Test</h1>
+    <div id="reader" style="width:300px;"></div>
+
+    <script>
+      const qrCodeSuccessCallback = (decodedText, decodedResult) => {
+          alert("QR: " + decodedText);
+      };
+
+      const html5QrCode = new Html5Qrcode("reader");
+
+      Html5Qrcode.getCameras().then(cameras => {
+          if (cameras && cameras.length) {
+              html5QrCode.start(
+                  cameras[0].id,
+                  { fps: 10, qrbox: 250 },
+                  qrCodeSuccessCallback
+              );
+          }
+      }).catch(err => {
+          alert("Kamera erişimi hatası: " + err);
+      });
+    </script>
+  </body>
+</html>

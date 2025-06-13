@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>QrPuantaj - QR Tarayıcı</title>
+  <!-- AdminLTE ve jQuery -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/jquery/dist/jquery.min.js"></script>
+  <!-- jsQR kütüphanesi -->
+  <script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.min.js"></script>
+  <style>
+    #video {
+      width: 100%;
+      max-width: 400px;
+      border: 2px solid #007bff;
+      border-radius: 10px;
+    }
+    #scanResult {
+      margin-top: 15px;
+      font-size: 1.1rem;
+    }
+  </style>
+</head>
+<body class="hold-transition sidebar-mini">
+<div class="wrapper p-4">
+  <h3 class="mb-3">QR Kodunu Tara</h3>
+  <video id="video" autoplay></video>
+  <p id="scanResult">📷 QR kod bekleniyor...</p>
+  <button id="logoutBtn" class="btn btn-danger mt-3">Çıkış Yap</button>
+</div>
+
+<script>
+  const video = document.getElementById('video');
+  const scanResult = document.getElementById('scanResult');
+  const username = localStorage.getItem('username');
+
+  // Giriş yapılmamışsa login sayfasına yönlendir
+  if (!username) {
+    alert('Önce giriş yapmalısın!');
+    window.location.href = '/login/';
+  }
+
+  // Kamerayı başlat
+  navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+    .then(stream => {
+      video.srcObject = stream;
+      video.setAttribute('playsinline', true); // iOS uyumluluğu
+      video.play();
+      requestAnimationFrame(tick);
+    })
+    .catch(err => {
+      alert('Kamera açılamadı: ' + err.message);
+    });
+
+  const canvas = document.createElement('canvas');
+  const context = canvas.getContext('2d');
+
+  function tick() {
+    if (video.readyState === video.HAVE_ENOUGH_DATA) {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+      const code = jsQR(imageData.data, canvas.width, canvas.height);
+
+      if (code) {
+        scanResult.innerText = "✅ QR Kod: " + code.data;
+
+        // Backend'e gönderme işlemi burada yapılacak
+        console.log("Tarandı:", code.data);
+
+        return; // QR bulunca taramayı durdur
+      } else {
+        scanResult.innerText = "📷 QR kod bekleniyor...";
+      }
+    }
+    requestAnimationFrame(tick);
+  }
+
+  $('#logoutBtn').click(() => {
+    localStorage.removeItem('username');
+    window.location.href = '/login/';
+  });
+</script>
+
+<!-- AdminLTE JS (opsiyonel ama ekliyorum) -->
+<script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
+</body>
+</html>
