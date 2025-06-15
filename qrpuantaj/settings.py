@@ -40,6 +40,11 @@ INSTALLED_APPS = [
 
     'core',
     'users',
+    'attendance',
+
+
+
+    'rest_framework',  # Django REST Framework
 ]
 
 MIDDLEWARE = [

@@ -17,10 +17,14 @@ Including another URLconf
 from django.contrib import admin
 from django.views.generic import TemplateView
 from django.urls import path,include
+from core.views import company_qr_code, qr_code_image
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('core/', include('core.urls')),
+    path('api/', include('attendance.urls')),
+    path('company/<int:company_id>/qr/', company_qr_code, name='company_qr_code'),
+    path('company/<int:company_id>/qr_image/', qr_code_image, name='qr_code_image'),
     path('login/', TemplateView.as_view(template_name='login.html'), name='login'),
     path('qr_scan/', TemplateView.as_view(template_name='qr_scan.html'), name='qr_scan'),
     path('test/', TemplateView.as_view(template_name='test.html'), name='test'),

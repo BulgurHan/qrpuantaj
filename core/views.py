@@ -1,8 +1,50 @@
-from django.http import JsonResponse
+from django.http import JsonResponse,HttpResponse
 from .models import Company, QRToken
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
+import io
+from django.shortcuts import get_object_or_404
+import time
+import hashlib
+import qrcode
+from io import BytesIO
 from .models import QRToken, ShiftSession, Employee, Company, User
+
+
+
+def generate_dynamic_qr(company):
+    # Örnek: şirketin gizli anahtarı + 3 dakikalık zaman dilimi
+    interval = 180  # saniye
+    current_interval = int(time.time() // interval)
+    data = f"{company.qr_secret}{current_interval}"
+    qr_code_str = hashlib.sha256(data.encode()).hexdigest()
+    return qr_code_str
+
+def qr_code_image(request, company_id):
+    company = get_object_or_404(Company, id=company_id)
+    qr_code_str = generate_dynamic_qr(company)
+
+    qr = qrcode.make(qr_code_str)
+
+    buf = io.BytesIO()
+    qr.save(buf, format='PNG')
+    buf.seek(0)
+
+    return HttpResponse(buf, content_type='image/png')
+
+
+
+def company_qr_code(request, company_id):
+    company = Company.objects.get(id=company_id)
+    company.update_qr_code()  # Güncel qr kodunu hesapla ve kaydet
+
+    qr_img = qrcode.make(company.qr_code)
+
+    buffer = BytesIO()
+    qr_img.save(buffer, format='PNG')
+    img_bytes = buffer.getvalue()
+
+    return HttpResponse(img_bytes, content_type='image/png')
 
 
 
@@ -54,3 +96,4 @@ def scan_qr(request):
         last_session.end_time = now
         last_session.save()
         return JsonResponse({'status': 'Mesai Bitti'})
+
