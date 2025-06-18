@@ -5,7 +5,7 @@ from rest_framework import status
 from core.models import Company, Attendance
 from django.utils import timezone
 from datetime import timedelta
-
+from rest_framework.views import APIView
 
 
 @api_view(['POST'])
@@ -41,3 +41,18 @@ def scan_qr(request):
         'company': company.name,
         'action': attendance.action,
     })
+
+
+
+
+
+class CompanyInfoView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        company = user.company  # veya ilişkiye göre uyarlarsın
+        return Response({
+            "name": company.name,
+            "qr_code": company.qr_code
+        })

@@ -1,3 +1,4 @@
+from django.shortcuts import render
 from django.http import JsonResponse,HttpResponse
 from .models import Company, QRToken
 from django.views.decorators.csrf import csrf_exempt
@@ -9,6 +10,11 @@ import hashlib
 import qrcode
 from io import BytesIO
 from .models import QRToken, ShiftSession, Employee, Company, User
+
+
+def home(request):
+    context = dict()
+    return render(request,'home.html',context)
 
 
 
