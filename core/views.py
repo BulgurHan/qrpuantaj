@@ -17,6 +17,10 @@ def home(request):
     return render(request,'home.html',context)
 
 
+def qr_scan(request):
+    context = dict()
+    return render(request, 'qr_scan.html', context)
+
 
 def generate_dynamic_qr(company):
     # Örnek: şirketin gizli anahtarı + 3 dakikalık zaman dilimi

@@ -21,17 +21,17 @@ from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
-from core.views import company_qr_code, qr_code_image,home
+from core.views import company_qr_code, qr_code_image,home,qr_scan
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('core/', include('core.urls')),
     path('api/', include('attendance.urls')),
     path('', home, name='home'),
+    path('qr_scan/', qr_scan, name='qr_scan'),
     path('company/<int:company_id>/qr/', company_qr_code, name='company_qr_code'),
     path('company/<int:company_id>/qr_image/', qr_code_image, name='qr_code_image'),
     path('login/', TemplateView.as_view(template_name='login.html'), name='login'),
-    path('qr_scan/', TemplateView.as_view(template_name='qr_scan.html'), name='qr_scan'),
     path('test/', TemplateView.as_view(template_name='test.html'), name='test'),
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
