@@ -23,6 +23,9 @@ def qr_scan(request):
     context = dict()
     return render(request, 'qr_scan.html', context)
 
+def login_view(request):
+    return render(request, 'login.html')
+
 
 def generate_dynamic_qr(company):
     # Örnek: şirketin gizli anahtarı + 3 dakikalık zaman dilimi
