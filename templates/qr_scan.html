@@ -3,11 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <title>QrPuantaj - QR Tarayıcı</title>
-  <!-- AdminLTE ve jQuery -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+  <!-- AdminLTE & jQuery -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
   <script src="https://cdn.jsdelivr.net/npm/jquery/dist/jquery.min.js"></script>
-  <!-- jsQR kütüphanesi -->
+
+  <!-- jsQR -->
   <script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.min.js"></script>
+
   <style>
     #video {
       width: 100%;
@@ -32,19 +36,18 @@
 <script>
   const video = document.getElementById('video');
   const scanResult = document.getElementById('scanResult');
-  const username = localStorage.getItem('username');
+  const token = localStorage.getItem('access_token');
 
-  // Giriş yapılmamışsa login sayfasına yönlendir
-  if (!username) {
+  if (!token) {
     alert('Önce giriş yapmalısın!');
     window.location.href = '/login/';
   }
 
-  // Kamerayı başlat
+  // Kamera başlat
   navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
     .then(stream => {
       video.srcObject = stream;
-      video.setAttribute('playsinline', true); // iOS uyumluluğu
+      video.setAttribute('playsinline', true); // iOS için
       video.play();
       requestAnimationFrame(tick);
     })
@@ -64,12 +67,31 @@
       const code = jsQR(imageData.data, canvas.width, canvas.height);
 
       if (code) {
-        scanResult.innerText = "✅ QR Kod: " + code.data;
+        const qrValue = code.data;
+        scanResult.innerText = "✅ QR Kod: " + qrValue;
 
-        // Backend'e gönderme işlemi burada yapılacak
-        console.log("Tarandı:", code.data);
+        // Tekrar taramayı engellemek için stream'i durdur
+        video.srcObject.getTracks().forEach(track => track.stop());
 
-        return; // QR bulunca taramayı durdur
+        // Backend'e gönder
+        fetch('/api/qr-scan/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+          },
+          body: JSON.stringify({ qr_code: qrValue })
+        })
+        .then(res => res.json())
+        .then(data => {
+          scanResult.innerText = `📌 ${data.status}`;
+        })
+        .catch(err => {
+          console.error(err);
+          scanResult.innerText = '❌ Sunucu hatası.';
+        });
+
+        return;
       } else {
         scanResult.innerText = "📷 QR kod bekleniyor...";
       }
@@ -78,11 +100,10 @@
   }
 
   $('#logoutBtn').click(() => {
-    localStorage.removeItem('username');
+    localStorage.removeItem('access_token');
     window.location.href = '/login/';
   });
 </script>
-
 
 <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
 </body>

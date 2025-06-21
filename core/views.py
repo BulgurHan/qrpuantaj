@@ -1,7 +1,9 @@
 from django.shortcuts import render
 from django.http import JsonResponse,HttpResponse
 from .models import Company, QRToken
-from django.views.decorators.csrf import csrf_exempt
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 from django.utils import timezone
 import io
 from django.shortcuts import get_object_or_404
@@ -9,7 +11,7 @@ import time
 import hashlib
 import qrcode
 from io import BytesIO
-from .models import QRToken, ShiftSession, Employee, Company, User
+from .models import QRToken, ShiftSession, Employee, Company, User, Attendance
 
 
 def home(request):
@@ -70,40 +72,35 @@ def generate_qr_token(request, company_id):
 
 
 
-@csrf_exempt
-def scan_qr(request):
-    token = request.GET.get('token')
-    user_id = request.GET.get('user_id')  # bunu JWT tokenla yapacağız sonra
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def qr_scan_api(request):
+    qr_code = request.data.get('qr_code')
+    user = request.user
 
-    if not token or not user_id:
-        return JsonResponse({'error': 'Eksik veri'}, status=400)
-
-    try:
-        qr_token = QRToken.objects.get(token=token)
-    except QRToken.DoesNotExist:
-        return JsonResponse({'error': 'Geçersiz QR'}, status=404)
-
-    if not qr_token.is_valid():
-        return JsonResponse({'error': 'QR süresi dolmuş'}, status=400)
+    if not qr_code:
+        return Response({'error': 'QR kod gerekli'}, status=400)
 
     try:
-        user = User.objects.get(id=user_id)
+        company = Company.objects.get(qr_code=qr_code)
+    except Company.DoesNotExist:
+        return Response({'error': 'Geçersiz QR kodu'}, status=404)
+
+    try:
         employee = Employee.objects.get(user=user)
-    except (User.DoesNotExist, Employee.DoesNotExist):
-        return JsonResponse({'error': 'Personel bulunamadı'}, status=404)
+    except Employee.DoesNotExist:
+        return Response({'error': 'Bu kullanıcı sisteme personel olarak tanımlı değil.'}, status=403)
 
-    now = timezone.now()
+    # Çıkış mı yapıyoruz yoksa giriş mi?
+    active_shift = ShiftSession.objects.filter(employee=employee, end_time__isnull=True).last()
 
-    # Son vardiyaya bak
-    last_session = ShiftSession.objects.filter(employee=employee).order_by('-start_time').first()
-
-    if not last_session or last_session.end_time:
-        # Yeni mesai başlat
-        ShiftSession.objects.create(employee=employee, start_time=now)
-        return JsonResponse({'status': 'Mesai Başladı'})
+    if active_shift:
+        active_shift.end_time = timezone.now()
+        active_shift.save()
+        Attendance.objects.create(user=user, company=company, action='exit')
+        return Response({'status': 'Çıkış yapıldı', 'ended_at': active_shift.end_time})
     else:
-        # Mesaiyi bitir
-        last_session.end_time = now
-        last_session.save()
-        return JsonResponse({'status': 'Mesai Bitti'})
+        ShiftSession.objects.create(employee=employee, start_time=timezone.now())
+        Attendance.objects.create(user=user, company=company, action='entry')
+        return Response({'status': 'Giriş yapıldı', 'started_at': timezone.now()})
 
