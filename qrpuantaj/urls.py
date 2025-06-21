@@ -18,10 +18,11 @@ from django.contrib import admin
 from django.views.generic import TemplateView
 from django.urls import path,include
 from rest_framework_simplejwt.views import (
-    TokenObtainPairView,
     TokenRefreshView,
 )
 from core.views import company_qr_code, qr_code_image,home,qr_scan
+from users.views import MyTokenObtainPairView
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -33,7 +34,7 @@ urlpatterns = [
     path('company/<int:company_id>/qr_image/', qr_code_image, name='qr_code_image'),
     path('login/', TemplateView.as_view(template_name='login.html'), name='login'),
     path('test/', TemplateView.as_view(template_name='test.html'), name='test'),
-    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/token/', MyTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 
 ]

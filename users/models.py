@@ -1,9 +1,17 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from .managers import UserManager
+
 
 
 # Kullanıcı rolleri ve şirket/şube ilişkilerini içeren genişletilmiş kullanıcı modeli
 class User(AbstractUser):
+    username = None
+    email = models.EmailField(unique=True)
+
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = []
+
     ROLE_CHOICES = (
         ('company_owner', 'Company Owner'),
         ('hr', 'HR Manager'),
@@ -13,3 +21,7 @@ class User(AbstractUser):
     company = models.ForeignKey('core.Company', on_delete=models.SET_NULL, null=True, blank=True)
     branch = models.ForeignKey('core.Branch', on_delete=models.SET_NULL, null=True, blank=True)
 
+    objects = UserManager()  
+
+    def __str__(self):
+        return self.email
