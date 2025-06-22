@@ -28,8 +28,7 @@ def login_view(request):
 
 
 def generate_dynamic_qr(company):
-    # Örnek: şirketin gizli anahtarı + 3 dakikalık zaman dilimi
-    interval = 180  # saniye
+    interval = 180  # 3 dakikalık zaman dilimi (saniye)
     current_interval = int(time.time() // interval)
     data = f"{company.qr_secret}{current_interval}"
     qr_code_str = hashlib.sha256(data.encode()).hexdigest()
@@ -46,20 +45,6 @@ def qr_code_image(request, company_id):
     buf.seek(0)
 
     return HttpResponse(buf, content_type='image/png')
-
-
-
-def company_qr_code(request, company_id):
-    company = Company.objects.get(id=company_id)
-    company.update_qr_code()  # Güncel qr kodunu hesapla ve kaydet
-
-    qr_img = qrcode.make(company.qr_code)
-
-    buffer = BytesIO()
-    qr_img.save(buffer, format='PNG')
-    img_bytes = buffer.getvalue()
-
-    return HttpResponse(img_bytes, content_type='image/png')
 
 
 
