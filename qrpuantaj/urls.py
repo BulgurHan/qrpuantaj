@@ -20,8 +20,8 @@ from django.urls import path,include
 from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
-from core.views import company_qr_code, qr_code_image,home,qr_scan,login_view
-from users.views import MyTokenObtainPairView, signin
+from core.views import qr_code_image,home,qr_scan,login_view
+from users.views import MyTokenObtainPairView 
 
 
 urlpatterns = [
@@ -31,7 +31,6 @@ urlpatterns = [
     path('', home, name='home'),
     path('qr-scan/', qr_scan, name='qr_scan'),
     path('login/', login_view, name='login_view'),
-    path('company/<int:company_id>/qr/', company_qr_code, name='company_qr_code'),
     path('company/<int:company_id>/qr_image/', qr_code_image, name='qr_code_image'),
     path('test/', TemplateView.as_view(template_name='test.html'), name='test'),
     path('api/token/', MyTokenObtainPairView.as_view(), name='token_obtain_pair'),
