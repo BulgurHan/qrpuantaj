@@ -23,6 +23,18 @@
       margin-top: 15px;
       font-size: 1.1rem;
     }
+    #debug {
+      margin-top: 25px;
+      padding: 10px;
+      background: #f1f1f1;
+      font-size: 0.9rem;
+      color: #333;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      white-space: pre-wrap;
+      max-height: 200px;
+      overflow-y: auto;
+    }
   </style>
 </head>
 <body class="hold-transition sidebar-mini">
@@ -31,15 +43,24 @@
   <video id="video" autoplay></video>
   <p id="scanResult">📷 QR kod bekleniyor...</p>
   <button id="logoutBtn" class="btn btn-danger mt-3">Çıkış Yap</button>
+
+  <!-- Debug Panel -->
+  <div id="debug"></div>
 </div>
 
 <script>
   const video = document.getElementById('video');
   const scanResult = document.getElementById('scanResult');
   const token = localStorage.getItem('access_token');
+  const debugPanel = document.getElementById('debug');
+
+  function log(msg) {
+    debugPanel.innerText += msg + '\n';
+  }
 
   if (!token) {
     alert('Önce giriş yapmalısın!');
+    log("🚫 Token bulunamadı. Giriş yapman gerekiyor.");
     window.location.href = '/login/';
   }
 
@@ -50,9 +71,11 @@
       video.setAttribute('playsinline', true); // iOS için
       video.play();
       requestAnimationFrame(tick);
+      log("📷 Kamera başarıyla başlatıldı.");
     })
     .catch(err => {
       alert('Kamera açılamadı: ' + err.message);
+      log("❌ Kamera hatası: " + err.message);
     });
 
   const canvas = document.createElement('canvas');
@@ -69,11 +92,13 @@
       if (code) {
         const qrValue = code.data;
         scanResult.innerText = "✅ QR Kod: " + qrValue;
+        log("📌 QR Tarandı: " + qrValue);
 
-        // Tekrar taramayı engellemek için stream'i durdur
+        // Stream kapat
         video.srcObject.getTracks().forEach(track => track.stop());
+        log("🛑 Kamera akışı durduruldu.");
 
-        // Backend'e gönder
+        // API'ye gönder
         fetch('/api/qr-scan/', {
           method: 'POST',
           headers: {
@@ -85,10 +110,12 @@
         .then(res => res.json())
         .then(data => {
           scanResult.innerText = `📌 ${data.status}`;
+          log("✅ Sunucu cevabı: " + JSON.stringify(data));
         })
         .catch(err => {
           console.error(err);
           scanResult.innerText = '❌ Sunucu hatası.';
+          log("❌ Fetch hatası: " + err.message);
         });
 
         return;
