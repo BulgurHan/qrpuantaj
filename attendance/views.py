@@ -11,22 +11,25 @@ from rest_framework.views import APIView
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def scan_qr(request):
-    qr_data = request.data.get('qr_data')
+    qr_code = request.data.get('qr_code')
 
-    if not qr_data:
-        return Response({'error': 'QR verisi gerekli.'}, status=status.HTTP_400_BAD_REQUEST)
+    if not qr_code:
+        return Response({'error': 'QR kodu gerekli.'}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
-        company = Company.objects.get(qr_code=qr_data)
+        company = Company.objects.get(qr_code=qr_code)
     except Company.DoesNotExist:
         return Response({'error': 'Geçersiz QR kodu.'}, status=status.HTTP_404_NOT_FOUND)
 
     user = request.user
     now = timezone.now()
-
-    # Aynı gün içinde kullanıcının son hareketini bul
     start_of_day = now.replace(hour=0, minute=0, second=0, microsecond=0)
-    last_attendance = Attendance.objects.filter(user=user, company=company, timestamp__gte=start_of_day).order_by('-timestamp').first()
+
+    last_attendance = Attendance.objects.filter(
+        user=user,
+        company=company,
+        timestamp__gte=start_of_day
+    ).order_by('-timestamp').first()
 
     if last_attendance and last_attendance.action == 'entry':
         action = 'exit'
