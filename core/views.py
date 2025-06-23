@@ -11,6 +11,8 @@ import time
 import hashlib
 import qrcode
 from io import BytesIO
+from collections import defaultdict
+from django.utils.timezone import localtime
 from .models import QRToken, ShiftSession, Employee, Company, User, Attendance
 
 
@@ -25,6 +27,26 @@ def qr_scan(request):
 
 def login_view(request):
     return render(request, 'login.html')
+
+
+def attendances(request):
+    user = request.user
+    attendances = Attendance.objects.filter(user=user).order_by('timestamp')
+
+    daily_records = defaultdict(dict)
+
+    for att in attendances:
+        date_str = localtime(att.timestamp).date().strftime('%Y-%m-%d')
+        if att.action == 'entry':
+            daily_records[date_str]['entry'] = localtime(att.timestamp).strftime('%H:%M:%S')
+        elif att.action == 'exit':
+            daily_records[date_str]['exit'] = localtime(att.timestamp).strftime('%H:%M:%S')
+
+    context = {
+        'daily_records': daily_records.items(),  # list of tuples: (date, {'entry': ..., 'exit': ...})
+    }
+    return render(request, 'attendances.html', context)
+
 
 
 def generate_dynamic_qr(company):

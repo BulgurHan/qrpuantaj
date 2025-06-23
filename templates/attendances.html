@@ -1,0 +1,89 @@
+{% extends "base/base.html" %}
+{% block content %}
+
+<!--begin::App Main-->
+<main class="app-main">
+    <!--begin::App Content Header-->
+    <div class="app-content-header">
+      <!--begin::Container-->
+      <div class="container-fluid">
+        <!--begin::Row-->
+        <div class="row">
+          <div class="col-sm-6"><h3 class="mb-0">Giriş - Çıkışlar</h3></div>
+          <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-end">
+              <li class="breadcrumb-item"><a href="{% url "home" %}">Anasayfa</a></li>
+              <li class="breadcrumb-item active" aria-current="page">Giriş - Çıkışlar</li>
+            </ol>
+          </div>
+        </div>
+        <!--end::Row-->
+      </div>
+      <!--end::Container-->
+    </div>
+    <!--end::App Content Header-->
+    <!--begin::App Content-->
+    <div class="app-content">
+      <!--begin::Container-->
+      <div class="container-fluid">
+        <!--begin::Row-->
+        <div class="row">
+          <div class="col-md-12">
+            <div class="card mb-4">
+              <div class="card-header"><h3 class="card-title">{{request.user.first_name}} {{request.user.last_name}} Kayıtlar</h3></div>
+              <!-- /.card-header -->
+              <div class="card-body">
+                <table class="table table-bordered">
+                    <thead>
+                      <tr>
+                        <th style="width: 10px">#</th>
+                        <th>Gün</th>
+                        <th>Giriş</th>
+                        <th>Çıkış</th>
+                        <th style="width: 100px">Bildir</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for date, record in daily_records %}
+                      <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ date }}</td>
+                        <td>{{ record.entry|default:"-" }}</td>
+                        <td>{{ record.exit|default:"-" }}</td>
+                        <td>
+                          {% if not record.entry or not record.exit %}
+                          <button class="btn btn-sm btn-warning">Eksik</button>
+                          {% else %}
+                          <span class="badge bg-success">Tamam</span>
+                          {% endif %}
+                        </td>
+                      </tr>
+                      {% empty %}
+                      <tr>
+                        <td colspan="5">Kayıt bulunamadı.</td>
+                      </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                  
+              </div>
+              <!-- /.card-body -->
+              <div class="card-footer clearfix">
+                <ul class="pagination pagination-sm m-0 float-end">
+                  <li class="page-item"><a class="page-link" href="#">&laquo;</a></li>
+                  <li class="page-item"><a class="page-link" href="#">1</a></li>
+                  <li class="page-item"><a class="page-link" href="#">2</a></li>
+                  <li class="page-item"><a class="page-link" href="#">3</a></li>
+                  <li class="page-item"><a class="page-link" href="#">&raquo;</a></li>
+                </ul>
+              </div>
+            </div>        
+        <!--end::Row-->
+      </div>
+      <!--end::Container-->
+    </div>
+    <!--end::App Content-->
+  </main>
+  <!--end::App Main-->
+
+  {% endblock content%}
