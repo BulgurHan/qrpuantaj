@@ -38,7 +38,6 @@ def scan_qr(request):
     for company in companies:
         if is_valid_qr(company, qr_code):
             matched_company = company
-            print(f"QR kodu {company.name} şirketi için geçerli.")
             break
 
     if not matched_company:

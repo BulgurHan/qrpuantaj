@@ -14,6 +14,7 @@ class Company(models.Model):
     package = models.CharField(max_length=50)  # Basic, Pro vs.
     qr_secret = models.UUIDField(default=uuid.uuid4)  # QR token için gizli anahtar
     qr_code = models.CharField(max_length=255, unique=True, blank=True)  # Güncel QR string
+    daily_work_hours = models.DecimalField(max_digits=4, decimal_places=2, default=8.00)
 
     def __str__(self):
         return self.name

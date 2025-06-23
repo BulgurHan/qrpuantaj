@@ -5,6 +5,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.utils import timezone
+from datetime import timedelta
 import io
 from django.shortcuts import get_object_or_404
 import time
@@ -47,6 +48,46 @@ def attendances(request):
     }
     return render(request, 'attendances.html', context)
 
+
+def calendar_summary(request):
+    user = request.user
+    today = timezone.now().date()
+    gun_sayisi = 30  # son 30 gün
+
+    days = []
+    for i in range(gun_sayisi):
+        date = today - timedelta(days=i)
+        start = timezone.datetime.combine(date, timezone.datetime.min.time()).replace(tzinfo=timezone.get_current_timezone())
+        end = start + timedelta(days=1)
+
+        day_logs = Attendance.objects.filter(user=user, timestamp__range=(start, end)).order_by('timestamp')
+        total_hours = 0
+
+        if day_logs.count() >= 2:
+            # Giriş/çıkış saatleri çift çift giderse hesapla
+            for j in range(0, len(day_logs)-1, 2):
+                entry = day_logs[j]
+                exit = day_logs[j+1] if j+1 < len(day_logs) else None
+                if exit:
+                    delta = exit.timestamp - entry.timestamp
+                    total_hours += delta.total_seconds() / 3600
+
+        # Günlük statü belirle
+        if total_hours == 0:
+            status = 'none'
+        elif total_hours >= user.company.daily_working_hours:
+            status = 'full' if total_hours == user.company.daily_working_hours else 'overtime'
+        else:
+            status = 'missing'
+
+        days.append({
+            'date': date,
+            'hours': round(total_hours, 2),
+            'status': status,
+        })
+
+    context = {'days': days}
+    return render(request, 'calender.html', context)
 
 
 def generate_dynamic_qr(company):
