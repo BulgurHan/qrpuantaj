@@ -1,7 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from datetime import timedelta
-from users.models import User  # Kullanıcı modelini içe aktar
+from users.models import User  
 from django.contrib.auth import get_user_model
 import uuid
 
