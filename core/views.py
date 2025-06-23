@@ -75,8 +75,8 @@ def calendar_summary(request):
         # Günlük statü belirle
         if total_hours == 0:
             status = 'none'
-        elif total_hours >= user.company.daily_working_hours:
-            status = 'full' if total_hours == user.company.daily_working_hours else 'overtime'
+        elif total_hours >= user.company.daily_work_hours:
+            status = 'full' if total_hours == user.company.daily_work_hours else 'overtime'
         else:
             status = 'missing'
 
