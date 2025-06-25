@@ -1,23 +1,50 @@
 {% extends "base/base.html" %}
 
 {% block content %}
-<div class="container mt-4">
-  <h2 class="mb-4">🗓️ Mesai Takvimi</h2>
-  <div class="row">
-    {% for day in days %}
-    <div class="col-md-3 mb-3">
-      <div class="p-3 rounded shadow-sm text-white 
-        {% if day.status == 'none' %} bg-secondary 
-        {% elif day.status == 'full' %} bg-success 
-        {% elif day.status == 'overtime' %} bg-danger 
-        {% elif day.status == 'missing' %} bg-warning text-dark 
-        {% endif %}">
-        <h6 class="mb-1">{{ day.date|date:"d M Y" }}</h6>
-        <p class="mb-0">Süre: {{ day.hours }} saat</p>
-        <strong class="text-uppercase">{{ day.status }}</strong>
+<!--begin::App Main-->
+<main class="app-main">
+    <!--begin::App Content Header-->
+    <div class="app-content-header">
+      <!--begin::Container-->
+      <div class="container-fluid">
+        <!--begin::Row-->
+        <div class="row">
+          <div class="col-sm-6"><h3 class="mb-0">🗓️ Mesai Takvimi</h3></div>
+          <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-end">
+              <li class="breadcrumb-item"><a href="{% url "home" %}">Anasayfa</a></li>
+              <li class="breadcrumb-item active" aria-current="page">Giriş - Çıkışlar</li>
+            </ol>
+          </div>
+        </div>
+        <!--end::Row-->
+      </div>
+      <!--end::Container-->
+    </div>
+    <div class="container mt-4">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <a class="btn btn-outline-primary" href="?ay={{ onceki_ay }}&yil={{ onceki_yil }}">⬅️ Önceki Ay</a>
+        <h3 class="mb-0">{{ ay_adi }} {{ yil }}</h3>
+        <a class="btn btn-outline-primary" href="?ay={{ sonraki_ay }}&yil={{ sonraki_yil }}">Sonraki Ay ➡️</a>
+      </div>
+
+      <div class="row">
+        {% for day in days %}
+        <div class="col-md-3 mb-3">
+          <div class="p-3 rounded shadow-sm text-white 
+            {% if day.status == 'none' %} bg-secondary 
+            {% elif day.status == 'full' %} bg-success 
+            {% elif day.status == 'overtime' %} bg-danger 
+            {% elif day.status == 'missing' %} bg-warning text-dark 
+            {% endif %}">
+            <h6 class="mb-1">{{ day.date|date:"d M Y" }}</h6>
+            <p class="mb-0">Süre: {{ day.hours }} saat</p>
+            <strong>{{ day.status|title }}</strong>
+          </div>
+        </div>
+        {% endfor %}
       </div>
     </div>
-    {% endfor %}
-  </div>
-</div>
+</main>
+<!--end::App Main-->
 {% endblock %}

@@ -5,13 +5,14 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.utils import timezone
-from datetime import timedelta
+from datetime import datetime, timedelta, date
 import io
 from django.shortcuts import get_object_or_404
 import time
 import hashlib
 import qrcode
 from io import BytesIO
+import calendar
 from collections import defaultdict
 from django.utils.timezone import localtime
 from .models import QRToken, ShiftSession, Employee, Company, User, Attendance
@@ -50,43 +51,60 @@ def attendances(request):
 
 
 def calendar_summary(request):
+    # URL parametrelerinden ay ve yıl al
+    today = timezone.localtime().date()
+    year = int(request.GET.get('yil', today.year))
+    month = int(request.GET.get('ay', today.month))
+
     user = request.user
-    today = timezone.now().date()
-    gun_sayisi = 30  # son 30 gün
+    gun_sayisi = calendar.monthrange(year, month)[1]
 
     days = []
-    for i in range(gun_sayisi):
-        date = today - timedelta(days=i)
-        start = timezone.datetime.combine(date, timezone.datetime.min.time()).replace(tzinfo=timezone.get_current_timezone())
+    for gun in range(1, gun_sayisi + 1):
+        current_date = date(year, month, gun)
+        start = timezone.make_aware(datetime.combine(current_date, datetime.min.time()))
         end = start + timedelta(days=1)
 
-        day_logs = Attendance.objects.filter(user=user, timestamp__range=(start, end)).order_by('timestamp')
+        logs = Attendance.objects.filter(user=user, timestamp__range=(start, end)).order_by('timestamp')
         total_hours = 0
 
-        if day_logs.count() >= 2:
-            # Giriş/çıkış saatleri çift çift giderse hesapla
-            for j in range(0, len(day_logs)-1, 2):
-                entry = day_logs[j]
-                exit = day_logs[j+1] if j+1 < len(day_logs) else None
+        if logs.count() >= 2:
+            for i in range(0, len(logs) - 1, 2):
+                entry = logs[i]
+                exit = logs[i + 1] if i + 1 < len(logs) else None
                 if exit:
                     delta = exit.timestamp - entry.timestamp
                     total_hours += delta.total_seconds() / 3600
 
-        # Günlük statü belirle
         if total_hours == 0:
             status = 'none'
-        elif total_hours >= user.company.daily_work_hours:
-            status = 'full' if total_hours == user.company.daily_work_hours else 'overtime'
+        elif total_hours >= user.company.daily_working_hours:
+            status = 'full' if total_hours == user.company.daily_working_hours else 'overtime'
         else:
             status = 'missing'
 
         days.append({
-            'date': date,
+            'date': current_date,
             'hours': round(total_hours, 2),
             'status': status,
         })
 
-    context = {'days': days}
+    turkce_aylar = [
+    "", "Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran",
+    "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"
+]
+    ay_adi = turkce_aylar[month]
+
+    context = {
+        'days': days,
+        'yil': year,
+        'ay': month,
+        'ay_adi': ay_adi,
+        'onceki_ay': month - 1 if month > 1 else 12,
+        'onceki_yil': year - 1 if month == 1 else year,
+        'sonraki_ay': month + 1 if month < 12 else 1,
+        'sonraki_yil': year + 1 if month == 12 else year,
+    }
     return render(request, 'calender.html', context)
 
 
