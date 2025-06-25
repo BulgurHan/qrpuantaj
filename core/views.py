@@ -141,7 +141,7 @@ def daily_attendance_report(request):
         if entry and exit:
             duration = exit - entry
             hours = duration.total_seconds() / 3600
-            expected = user.company.work_duration  # örnek: 8.0 saat
+            expected = user.company.daily_work_hours  # örnek: 8.0 saat
             if hours >= expected:
                 status = '🕒 Fazla Mesai' if hours > expected else '✅ Tam Süre'
             else:
