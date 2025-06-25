@@ -108,6 +108,63 @@ def calendar_summary(request):
     return render(request, 'calender.html', context)
 
 
+
+def daily_attendance_report(request):
+    date_str = request.GET.get('date')
+    if date_str:
+        selected_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+    else:
+        selected_date = timezone.now().date()
+
+    company = request.user.company
+    entries = Attendance.objects.filter(
+        company=company,
+        timestamp__date=selected_date
+    ).order_by('user', 'timestamp')
+
+    report = {}
+
+    for entry in entries:
+        user = entry.user
+        if user not in report:
+            report[user] = {'entry': None, 'exit': None}
+
+        if entry.action == 'entry':
+            report[user]['entry'] = entry.timestamp
+        elif entry.action == 'exit':
+            report[user]['exit'] = entry.timestamp
+
+    rows = []
+    for user, data in report.items():
+        entry = data['entry']
+        exit = data['exit']
+        if entry and exit:
+            duration = exit - entry
+            hours = duration.total_seconds() / 3600
+            expected = user.company.work_duration  # örnek: 8.0 saat
+            if hours >= expected:
+                status = '🕒 Fazla Mesai' if hours > expected else '✅ Tam Süre'
+            else:
+                status = '⚠️ Eksik Mesai'
+        else:
+            hours = 0
+            status = '❌ Eksik Kayıt'
+
+        rows.append({
+            'user': user.get_full_name(),
+            'entry': entry.time().strftime('%H:%M') if entry else '-',
+            'exit': exit.time().strftime('%H:%M') if exit else '-',
+            'duration': round(hours, 2),
+            'status': status,
+            'date': selected_date
+        })
+
+    return render(request, 'report.html', {
+        'rows': rows,
+        'selected_date': selected_date.strftime('%Y-%m-%d')
+    })
+
+
 def generate_dynamic_qr(company):
     interval = 180  # 3 dakikalık zaman dilimi (saniye)
     current_interval = int(time.time() // interval)

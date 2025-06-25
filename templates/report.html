@@ -1,0 +1,57 @@
+{% extends "base/base.html" %}
+{% block content %}
+<!--begin::App Main-->
+<main class="app-main">
+  <div class="app-content">
+    <!--begin::App Content Header-->
+    <div class="app-content-header">
+      <!--begin::Container-->
+      <div class="container-fluid">
+        <!--begin::Row-->
+        <div class="row">
+          <div class="col-sm-6"><h3 class="mb-0">{{ selected_date }} - Günlük Çalışma Raporu</h3></div>
+          <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-end">
+              <li class="breadcrumb-item"><a href="{% url "home" %}">Anasayfa</a></li>
+              <li class="breadcrumb-item active" aria-current="page">{{ selected_date }} - Günlük Çalışma Raporu</li>
+            </ol>
+          </div>
+        </div>
+        <!--end::Row-->
+      </div>
+      <!--end::Container-->
+    </div>
+
+    <form method="get" class="mb-3 d-flex gap-2 align-items-center">
+      <label for="date" class="form-label mb-0">Tarih:</label>
+      <input type="date" class="form-control" name="date" id="date" value="{{ selected_date }}" />
+      <button type="submit" class="btn btn-primary">Göster</button>
+    </form>
+
+    <table class="table table-bordered table-hover">
+      <thead class="table-light">
+        <tr>
+          <th>Personel</th>
+          <th>Giriş</th>
+          <th>Çıkış</th>
+          <th>Süre (saat)</th>
+          <th>Durum</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+        <tr>
+          <td>{{ row.user }}</td>
+          <td>{{ row.entry }}</td>
+          <td>{{ row.exit }}</td>
+          <td>{{ row.duration }}</td>
+          <td>{{ row.status }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    </div>
+  <!--end::App Content-->
+</main>
+<!--end::App Main-->
+{% endblock content %}
