@@ -50,7 +50,10 @@
                 {% endif %}
                 </td>
                 <td>
-                <a href="#" class="btn btn-sm btn-outline-info">Detay</a>
+                <a href="{% url 'staff_update' user.id %}"
+                    class="btn btn-sm btn-outline-info">
+                    Detay / Düzenle
+                    </a>
                 </td>
             </tr>
             {% empty %}

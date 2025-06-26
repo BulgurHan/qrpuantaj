@@ -1,0 +1,93 @@
+{% extends "base/base.html" %}
+{% block content %}
+<!-- <!--begin::App Main--> -->
+<main class="app-main">     
+    <!--begin::App Content Header--> 
+    <div class="app-content-header">
+      <!--begin::Container-->
+      <div class="container-fluid">
+        <!--begin::Row-->
+        <div class="row">
+          <div class="col-sm-6"><h3 class="mb-0">👥 Personel Ekle</h3></div>
+          <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-end">
+              <li class="breadcrumb-item"><a href="{% url "home" %}">Anasayfa</a></li>
+              <li class="breadcrumb-item active" aria-current="page">Personel Ekle</li>
+            </ol>
+          </div>
+        </div>  
+        <!--end::Row-->
+        </div>
+        <!--end::Container-->
+        </div>
+    <!--end::App Content Header-->
+    <!--begin::App Content-->
+    <div class="app-content">
+      <!--begin::Container-->
+      <div class="container-fluid">
+        <!--begin::Row-->
+        <div class="row">
+          <div class="col-md-12">       
+            <div class="card mb-4">
+              <div class="card-header"></div>
+              <!-- /.card-header -->
+              <div class="card-body">
+                <div class="container mt-4">
+                    <h3>{{ is_edit|yesno:"Personel Düzenle,Yeni Personel Ekle" }}</h3>
+                    <form method="post" class="mt-4">
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                          <label for="id_first_name" class="form-label">Ad</label>
+                          {{ form.first_name|add_class:"form-control" }}
+                          {{ form.first_name.errors }}
+                        </div>
+
+                        <div class="mb-3">
+                          <label for="id_last_name" class="form-label">Soyad</label>
+                          {{ form.last_name|add_class:"form-control" }}
+                          {{ form.last_name.errors }}
+                        </div>
+
+                        <div class="mb-3">
+                          <label for="id_email" class="form-label">E-posta</label>
+                          {{ form.email|add_class:"form-control" }}
+                          {{ form.email.errors }}
+                        </div>
+
+                        <div class="mb-3">
+                          <label for="id_phone_number" class="form-label">Telefon</label>
+                          {{ form.phone_number|add_class:"form-control" }}
+                          {{ form.phone_number.errors }}
+                        </div>
+
+                        <div class="mb-3">
+                          <label for="id_role" class="form-label">Rol</label>
+                          {{ form.role|add_class:"form-select" }}
+                          {{ form.role.errors }}
+                        </div>
+
+                        <div class="mb-3">
+                          <label for="id_password" class="form-label">Şifre</label>
+                          {{ form.password|add_class:"form-control" }}
+                          {% if form.password.help_text %}<small class="text-muted">{{ form.password.help_text }}</small>{% endif %}
+                          {{ form.password.errors }}
+                        </div>
+
+                        <button type="submit" class="btn btn-success">
+                          {{ is_edit|yesno:"Kaydet,Ekle" }}
+                        </button>
+                        <a href="{% url 'staff_list' %}" class="btn btn-secondary">İptal</a>
+                      </form>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!--end::Row-->
+      </div>
+      <!--end::Container-->
+    </div>
+    <!--end::App Content-->
+  </main>
+{% endblock content %}
+<!-- <!--end::App Main--> -->

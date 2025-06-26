@@ -1,11 +1,27 @@
 from django import forms
-from django.contrib.auth.forms import UserCreationForm
 from .models import User
-import datetime
 
 
 
+class StaffForm(forms.ModelForm):
+    password = forms.CharField(
+        widget=forms.PasswordInput,
+        required=False,                # ← düzenlemede boş geçilebilsin
+        help_text="Yeni şifre vermek istemiyorsan boş bırak."
+    )
 
+    class Meta:
+        model = User
+        fields = ['first_name','last_name', 'email', 'role', 'password']
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        pwd  = self.cleaned_data.get("password")
+        if pwd:                        # sadece yazılmışsa şifreyi güncelle
+            user.set_password(pwd)
+        if commit:
+            user.save()
+        return user
 
 class SignInForm(forms.Form):
 

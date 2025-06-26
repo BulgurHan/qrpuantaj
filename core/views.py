@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render,redirect
 from django.http import JsonResponse,HttpResponse
 from .models import Company, QRToken
 from rest_framework.decorators import api_view, permission_classes
@@ -15,6 +15,8 @@ from io import BytesIO
 import calendar
 from collections import defaultdict
 from django.utils.timezone import localtime
+from django.contrib import messages
+from users.forms import StaffForm   
 from .models import QRToken, ShiftSession, Employee, Company, User, Attendance
 
 
@@ -177,6 +179,39 @@ def staff_list(request):
         'users': users,
         'query': query
     })
+
+
+def staff_create(request):
+    if request.method == 'POST':
+        form = StaffForm(request.POST)
+        if form.is_valid():
+            user = form.save(commit=False)
+            user.company = request.user.company
+            user.is_staff = False
+            user.is_active = True
+            user.save()
+            messages.success(request, "Personel eklendi.")
+            return redirect('staff_list')
+    else:
+        form = StaffForm()
+
+    return render(request, 'staff-form.html', {'form': form, 'is_edit': False})
+
+
+def staff_update(request, user_id):
+    person = get_object_or_404(User, id=user_id, company=request.user.company)
+    if request.method == 'POST':
+        form = StaffForm(request.POST, instance=person)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Personel güncellendi.")
+            return redirect('staff_list')
+    else:
+        form = StaffForm(instance=person)
+
+    return render(request, 'staff-form.html', {'form': form, 'is_edit': True, 'person': person})
+
+
 
 def generate_dynamic_qr(company):
     interval = 180  # 3 dakikalık zaman dilimi (saniye)

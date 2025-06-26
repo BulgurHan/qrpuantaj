@@ -202,7 +202,7 @@
   </li>
 
   <li class="nav-item">
-    <a href="#" class="nav-link">
+    <a href="{% url "staff_create" %}" class="nav-link {% if request.resolver_match.url_name == 'staff_create' %}active{% endif %}">
       <i class="nav-icon bi bi-person-plus-fill"></i>
       <p>Yeni Personel Ekle</p>
     </a>
