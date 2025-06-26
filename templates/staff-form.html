@@ -1,6 +1,8 @@
+
 {% extends "base/base.html" %}
+{% load form_extras %}
 {% block content %}
-<!-- <!--begin::App Main--> -->
+<!-- begin::App Main -->
 <main class="app-main">     
     <!--begin::App Content Header--> 
     <div class="app-content-header">
@@ -53,12 +55,6 @@
                           <label for="id_email" class="form-label">E-posta</label>
                           {{ form.email|add_class:"form-control" }}
                           {{ form.email.errors }}
-                        </div>
-
-                        <div class="mb-3">
-                          <label for="id_phone_number" class="form-label">Telefon</label>
-                          {{ form.phone_number|add_class:"form-control" }}
-                          {{ form.phone_number.errors }}
                         </div>
 
                         <div class="mb-3">
