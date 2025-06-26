@@ -165,6 +165,19 @@ def daily_attendance_report(request):
     })
 
 
+def staff_list(request):
+    company = request.user.company
+    query = request.GET.get('q', '')
+
+    users = User.objects.filter(company=company)
+    if query:
+        users = users.filter(first_name__icontains=query)
+
+    return render(request, 'staff-list.html', {
+        'users': users,
+        'query': query
+    })
+
 def generate_dynamic_qr(company):
     interval = 180  # 3 dakikalık zaman dilimi (saniye)
     current_interval = int(time.time() // interval)

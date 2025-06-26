@@ -142,7 +142,7 @@
   <!-- === ORTAK === -->
   <li class="nav-item">
     <a href="{% url 'home' %}"
-       class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+       class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
       <i class="nav-icon bi bi-speedometer"></i>
       <p>Dashboard</p>
     </a>
@@ -195,7 +195,7 @@
   {% else %}
   <!-- === YÖNETİCİ / İK MENÜSÜ === -->
   <li class="nav-item">
-    <a href="#" class="nav-link">
+    <a href="{% url "staff_list" %}" class="nav-link {% if request.resolver_match.url_name == 'staff_list' %}active{% endif %}">
       <i class="nav-icon bi bi-people-fill"></i>
       <p>Personel Listesi</p>
     </a>
