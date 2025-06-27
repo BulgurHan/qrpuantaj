@@ -1,81 +1,45 @@
-<!DOCTYPE html>
-<html lang="tr">
-<head>
-  <meta charset="UTF-8">
-  <title>QrPuantaj - QR Tarayıcı</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  
-  <!-- AdminLTE & jQuery -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/jquery/dist/jquery.min.js"></script>
+{% extends "base/base.html" %}
+{% load static %}
 
-  <!-- jsQR -->
-  <script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.min.js"></script>
-
-  <style>
-    #video {
-      width: 100%;
-      max-width: 400px;
-      border: 2px solid #007bff;
-      border-radius: 10px;
-    }
-    #scanResult {
-      margin-top: 15px;
-      font-size: 1.1rem;
-    }
-    #debug {
-      margin-top: 25px;
-      padding: 10px;
-      background: #f1f1f1;
-      font-size: 0.9rem;
-      color: #333;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      white-space: pre-wrap;
-      max-height: 200px;
-      overflow-y: auto;
-    }
-  </style>
-</head>
-<body class="hold-transition sidebar-mini">
-<div class="wrapper p-4">
-  <h3 class="mb-3">QR Kodunu Tara</h3>
-  <video id="video" autoplay></video>
-  <p id="scanResult">📷 QR kod bekleniyor...</p>
-  <button id="logoutBtn" class="btn btn-danger mt-3">Çıkış Yap</button>
-
-  <!-- Debug Panel -->
-  <div id="debug"></div>
+{% block content %}
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-md-6 text-center">
+      <h3 class="mb-4">📷 QR Kodunu Tara</h3>
+      <video id="video" autoplay playsinline class="img-fluid border border-primary rounded mb-3"></video>
+      <p id="scanResult" class="lead">QR kod bekleniyor...</p>
+    </div>
+  </div>
 </div>
+
+<!-- Ses efekti -->
+<audio id="beepSound" src="{% static 'audio/beep.wav' %}"></audio>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<!-- Gerekli JS -->
+<script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.min.js"></script>
 
 <script>
   const video = document.getElementById('video');
   const scanResult = document.getElementById('scanResult');
   const token = localStorage.getItem('access_token');
-  const debugPanel = document.getElementById('debug');
-
-  function log(msg) {
-    debugPanel.innerText += msg + '\n';
-  }
+  const beep = document.getElementById('beepSound');
 
   if (!token) {
-    alert('Önce giriş yapmalısın!');
-    log("🚫 Token bulunamadı. Giriş yapman gerekiyor.");
+    alert('🚫 Giriş yapmadan QR tarayamazsın!');
     window.location.href = '/login/';
   }
 
-  // Kamera başlat
   navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
     .then(stream => {
       video.srcObject = stream;
-      video.setAttribute('playsinline', true); // iOS için
       video.play();
       requestAnimationFrame(tick);
-      log("📷 Kamera başarıyla başlatıldı.");
     })
     .catch(err => {
-      alert('Kamera açılamadı: ' + err.message);
-      log("❌ Kamera hatası: " + err.message);
+      alert('❌ Kamera açılamadı: ' + err.message);
     });
 
   const canvas = document.createElement('canvas');
@@ -92,13 +56,10 @@
       if (code) {
         const qrValue = code.data;
         scanResult.innerText = "✅ QR Kod: " + qrValue;
-        log("📌 QR Tarandı: " + qrValue);
+        beep.play(); // bip sesi
 
-        // Stream kapat
         video.srcObject.getTracks().forEach(track => track.stop());
-        log("🛑 Kamera akışı durduruldu.");
 
-        // API'ye gönder
         fetch('/api/scan-qr/', {
           method: 'POST',
           headers: {
@@ -109,29 +70,25 @@
         })
         .then(res => res.json())
         .then(data => {
-          scanResult.innerText = `📌 ${data.status}`;
-          log("✅ Sunucu cevabı: " + JSON.stringify(data));
+          if (data.message) {
+            alert(data.message);
+          } else {
+            alert(data.error || "Bilinmeyen hata oluştu.");
+          }
         })
         .catch(err => {
-          console.error(err);
-          scanResult.innerText = '❌ Sunucu hatası.';
-          log("❌ Fetch hatası: " + err.message);
+          alert('❌ Sunucu hatası: ' + err.message);
         });
 
         return;
-      } else {
-        scanResult.innerText = "📷 QR kod bekleniyor...";
       }
     }
     requestAnimationFrame(tick);
   }
 
-  $('#logoutBtn').click(() => {
+  document.getElementById('logoutBtn').addEventListener('click', () => {
     localStorage.removeItem('access_token');
     window.location.href = '/login/';
   });
 </script>
-
-<script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
-</body>
-</html>
+{% endblock %}
