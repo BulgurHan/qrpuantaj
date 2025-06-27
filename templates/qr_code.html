@@ -5,9 +5,7 @@
 <main class="app-main">
     <!--begin::App Content Header-->
     <div class="app-content-header">
-      <!--begin::Container-->
       <div class="container-fluid">
-        <!--begin::Row-->
         <div class="row">
           <div class="col-sm-6"><h3 class="mb-0">{{request.user.company.name}} Qr Kod</h3></div>
           <div class="col-sm-6">
@@ -17,18 +15,31 @@
             </ol>
           </div>
         </div>
-        <!--end::Row-->
       </div>
-      <!--end::Container-->
     </div>
+
     <div class="container py-4">
       <div class="row justify-content-center">
-        <div class="col-md-6 text-center">
-          <h3 class="mb-4">📷 QR   </h3> 
-            <iframe id="qrFrame" src="{% url 'qr_code_image' company.id %}" width="250" height="250" frameborder="0"></iframe>
+        <div class="text-center">
+          <h4>📷 Mesaini başlatmak veya bitirmek için QR okut.</h4>
+          <img id="qrImage" src="{% url 'qr_code_image' company.id %}" width="250" height="250" style="border: 2px solid #ccc; border-radius: 10px;" alt="QR Kod">
+          <p class="mt-2">Bu QR kod <strong>3 dakikada bir</strong> otomatik güncellenir.</p>
         </div>
       </div>
     </div>
 </main>
 <!--end::App Main-->
+
+<script>
+  const qrImg = document.getElementById('qrImage');
+  const originalSrc = qrImg.getAttribute('src');   // /company/1/qr_image/
+
+  function refreshQR() {
+    qrImg.src = originalSrc + '?_=' + Date.now();  // önbelleği kır
+  }
+
+  refreshQR();                    // sayfa ilk yüklenince
+  setInterval(refreshQR, 180000); // 3 dk = 180 000 ms
+</script>
+
 {% endblock %}
