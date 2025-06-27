@@ -2,93 +2,113 @@
 {% load static %}
 
 {% block content %}
-<div class="container py-4">
-  <div class="row justify-content-center">
-    <div class="col-md-6 text-center">
-      <h3 class="mb-4">📷 QR Kodunu Tara</h3>
-      <video id="video" autoplay playsinline class="img-fluid border border-primary rounded mb-3"></video>
-      <p id="scanResult" class="lead">QR kod bekleniyor...</p>
+<!--begin::App Main-->
+<main class="app-main">
+    <!--begin::App Content Header-->
+    <div class="app-content-header">
+      <!--begin::Container-->
+      <div class="container-fluid">
+        <!--begin::Row-->
+        <div class="row">
+          <div class="col-sm-6"><h3 class="mb-0">📷 QR Kodunu Tara</h3></div>
+          <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-end">
+              <li class="breadcrumb-item"><a href="{% url "home" %}">Anasayfa</a></li>
+              <li class="breadcrumb-item active" aria-current="page">QR Kodunu Tara</li>
+            </ol>
+          </div>
+        </div>
+        <!--end::Row-->
+      </div>
+      <!--end::Container-->
     </div>
-  </div>
-</div>
+    <div class="container py-4">
+      <div class="row justify-content-center">
+        <div class="col-md-6 text-center">
+          <h3 class="mb-4">📷 QR Kodunu Tara</h3>
+          <video id="video" autoplay playsinline class="img-fluid border border-primary rounded mb-3"></video>
+          <p id="scanResult" class="lead">QR kod bekleniyor...</p>
+        </div>
+      </div>
+    </div>
 
-<!-- Ses efekti -->
-<audio id="beepSound" src="{% static 'audio/beep.wav' %}"></audio>
+    <!-- Ses efekti -->
+    <audio id="beepSound" src="{% static 'audio/beep.wav' %}"></audio>
+  </main>
+    {% endblock %}
 
-{% endblock %}
+    {% block extra_scripts %}
+    <!-- Gerekli JS -->
+    <script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.min.js"></script>
 
-{% block extra_scripts %}
-<!-- Gerekli JS -->
-<script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.min.js"></script>
+    <script>
+      const video = document.getElementById('video');
+      const scanResult = document.getElementById('scanResult');
+      const token = localStorage.getItem('access_token');
+      const beep = document.getElementById('beepSound');
 
-<script>
-  const video = document.getElementById('video');
-  const scanResult = document.getElementById('scanResult');
-  const token = localStorage.getItem('access_token');
-  const beep = document.getElementById('beepSound');
+      if (!token) {
+        alert('🚫 Giriş yapmadan QR tarayamazsın!');
+        window.location.href = '/login/';
+      }
 
-  if (!token) {
-    alert('🚫 Giriş yapmadan QR tarayamazsın!');
-    window.location.href = '/login/';
-  }
-
-  navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
-    .then(stream => {
-      video.srcObject = stream;
-      video.play();
-      requestAnimationFrame(tick);
-    })
-    .catch(err => {
-      alert('❌ Kamera açılamadı: ' + err.message);
-    });
-
-  const canvas = document.createElement('canvas');
-  const context = canvas.getContext('2d');
-
-  function tick() {
-    if (video.readyState === video.HAVE_ENOUGH_DATA) {
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      context.drawImage(video, 0, 0, canvas.width, canvas.height);
-      const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-      const code = jsQR(imageData.data, canvas.width, canvas.height);
-
-      if (code) {
-        const qrValue = code.data;
-        scanResult.innerText = "✅ QR Kod: " + qrValue;
-        beep.play(); // bip sesi
-
-        video.srcObject.getTracks().forEach(track => track.stop());
-
-        fetch('/api/scan-qr/', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + token
-          },
-          body: JSON.stringify({ qr_code: qrValue })
-        })
-        .then(res => res.json())
-        .then(data => {
-          if (data.message) {
-            alert(data.message);
-          } else {
-            alert(data.error || "Bilinmeyen hata oluştu.");
-          }
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+        .then(stream => {
+          video.srcObject = stream;
+          video.play();
+          requestAnimationFrame(tick);
         })
         .catch(err => {
-          alert('❌ Sunucu hatası: ' + err.message);
+          alert('❌ Kamera açılamadı: ' + err.message);
         });
 
-        return;
-      }
-    }
-    requestAnimationFrame(tick);
-  }
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d');
 
-  document.getElementById('logoutBtn').addEventListener('click', () => {
-    localStorage.removeItem('access_token');
-    window.location.href = '/login/';
-  });
-</script>
-{% endblock %}
+      function tick() {
+        if (video.readyState === video.HAVE_ENOUGH_DATA) {
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          context.drawImage(video, 0, 0, canvas.width, canvas.height);
+          const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+          const code = jsQR(imageData.data, canvas.width, canvas.height);
+
+          if (code) {
+            const qrValue = code.data;
+            scanResult.innerText = "✅ QR Kod: " + qrValue;
+            beep.play(); // bip sesi
+
+            video.srcObject.getTracks().forEach(track => track.stop());
+
+            fetch('/api/scan-qr/', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token
+              },
+              body: JSON.stringify({ qr_code: qrValue })
+            })
+            .then(res => res.json())
+            .then(data => {
+              if (data.message) {
+                alert(data.message);
+              } else {
+                alert(data.error || "Bilinmeyen hata oluştu.");
+              }
+            })
+            .catch(err => {
+              alert('❌ Sunucu hatası: ' + err.message);
+            });
+
+            return;
+          }
+        }
+        requestAnimationFrame(tick);
+      }
+
+      document.getElementById('logoutBtn').addEventListener('click', () => {
+        localStorage.removeItem('access_token');
+        window.location.href = '/login/';
+      });
+    </script>
+    {% endblock %}
