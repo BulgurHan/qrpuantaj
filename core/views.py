@@ -232,7 +232,15 @@ def qr_code_image(request, company_id):
 
     return HttpResponse(buf, content_type='image/png')
 
+def company_qr_code(request, company_id):
+    company = get_object_or_404(Company, id=company_id)
+    qr_code_str = generate_dynamic_qr(company)
 
+    context = {
+        'company': company,
+        'qr_code_str': qr_code_str,
+    }
+    return render(request, 'qr_code.html', context)
 
 def generate_qr_token(request, company_id):
     # → ileri aşamada sadece HR ya da owner olanlar bu endpoint'e erişebilmeli
