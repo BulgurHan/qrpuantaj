@@ -291,11 +291,13 @@ def qr_scan_api(request):
 
 def manual_attendance_entry(request):
     if request.method == 'POST':
-        form = ManualAttendanceForm(request.POST, request=request)  
+        form = ManualAttendanceForm(request.POST or None, request=request)
         if form.is_valid():
             form.save()
             messages.success(request, "✔️ Katılım başarıyla kaydedildi.")
             return redirect('manual_attendance_entry')
+        if form.errors:
+            messages.error(request, "{}".format(form.errors))
         else:
             messages.error(request, "❌ Lütfen formu doğru doldurun.")
     else:
