@@ -24,4 +24,4 @@ class User(AbstractUser):
     objects = UserManager()  
 
     def __str__(self):
-        return self.email
+        return self.first_name + ' ' + self.last_name if self.first_name and self.last_name else self.email

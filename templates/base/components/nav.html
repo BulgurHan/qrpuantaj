@@ -166,9 +166,9 @@
   </li>
 
   <li class="nav-item">
-    <a href="#" class="nav-link">
+    <a href="{% url "manual_attendance_entry" %}" class="nav-link">
       <i class="nav-icon bi bi-qr-code"></i>
-      <p>QR Kodum</p>
+      <p>Manuel Kayıt Ekle</p>
     </a>
   </li>
 
@@ -208,7 +208,12 @@
       <p>Yeni Personel Ekle</p>
     </a>
   </li>
-
+    <li class="nav-item">
+    <a href="{% url "manual_attendance_entry" %}" class="nav-link {% if request.resolver_match.url_name == 'manual_attendance_entry' %}active{% endif %}">
+      <i class="nav-icon bi bi-qr-code"></i>
+      <p>Manuel Kayıt Ekle</p>
+    </a>
+  </li>
   <li class="nav-item">
     <a href="#" class="nav-link">
       <i class="nav-icon bi bi-building"></i>

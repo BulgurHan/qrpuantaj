@@ -83,8 +83,9 @@ class QRToken(models.Model):
 class Attendance(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     company = models.ForeignKey('Company', on_delete=models.CASCADE)
-    timestamp = models.DateTimeField(auto_now_add=True)
+    timestamp = models.DateTimeField(editable=True)
     action = models.CharField(max_length=10, choices=[('entry', 'Entry'), ('exit', 'Exit')])
+    added_by_hr = models.BooleanField(default=False)  # Manuel mi eklendi?
 
     def __str__(self):
-        return f"{self.user.username} - {self.company.name} - {self.action} @ {self.timestamp}"
+        return f"{self.user} - {self.company.name} - {self.action} @ {self.timestamp}"

@@ -17,6 +17,7 @@ from collections import defaultdict
 from django.utils.timezone import localtime
 from django.contrib import messages
 from users.forms import StaffForm   
+from .forms import ManualAttendanceForm
 from .models import QRToken, ShiftSession, Employee, Company, User, Attendance
 
 
@@ -259,6 +260,7 @@ def generate_qr_token(request, company_id):
 def qr_scan_api(request):
     qr_code = request.data.get('qr_code')
     user = request.user
+    now = timezone.now()  
 
     if not qr_code:
         return Response({'error': 'QR kod gerekli'}, status=400)
@@ -277,12 +279,26 @@ def qr_scan_api(request):
     active_shift = ShiftSession.objects.filter(employee=employee, end_time__isnull=True).last()
 
     if active_shift:
-        active_shift.end_time = timezone.now()
+        active_shift.end_time = now
         active_shift.save()
-        Attendance.objects.create(user=user, company=company, action='exit')
-        return Response({'status': 'Çıkış yapıldı', 'ended_at': active_shift.end_time})
+        Attendance.objects.create(user=user, company=company, action='exit', timestamp=now)
+        return Response({'status': 'Çıkış yapıldı', 'ended_at': now})
     else:
-        ShiftSession.objects.create(employee=employee, start_time=timezone.now())
-        Attendance.objects.create(user=user, company=company, action='entry')
-        return Response({'status': 'Giriş yapıldı', 'started_at': timezone.now()})
+        ShiftSession.objects.create(employee=employee, start_time=now)
+        Attendance.objects.create(user=user, company=company, action='entry', timestamp=now)
+        return Response({'status': 'Giriş yapıldı', 'started_at': now})
 
+
+def manual_attendance_entry(request):
+    if request.method == 'POST':
+        form = ManualAttendanceForm(request.POST, request=request)  
+        if form.is_valid():
+            form.save()
+            messages.success(request, "✔️ Katılım başarıyla kaydedildi.")
+            return redirect('manual_attendance_entry')
+        else:
+            messages.error(request, "❌ Lütfen formu doğru doldurun.")
+    else:
+        form = ManualAttendanceForm(request=request) 
+
+    return render(request, 'manual_entry.html', {'form': form})
