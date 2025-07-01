@@ -52,10 +52,77 @@ class Employee(models.Model):
 
 
 class ShiftSession(models.Model):
-    employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
-    start_time = models.DateTimeField()
-    end_time = models.DateTimeField(null=True, blank=True)
-    auto_closed = models.BooleanField(default=False)  # unutulan çıkışlar için
+    user = models.ForeignKey(
+        User, 
+        on_delete=models.CASCADE,
+        related_name='shift_sessions',
+        verbose_name='Kullanıcı'
+    )
+    company = models.ForeignKey(
+        'Company',  # Company modelinizin adı
+        on_delete=models.CASCADE,
+        verbose_name='Şirket'
+    )
+    start_time = models.DateTimeField(
+        verbose_name='Başlangıç Saati'
+    )
+    end_time = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name='Bitiş Saati'
+    )
+    date = models.DateField(
+        verbose_name='Vardiya Tarihi',
+        help_text='Vardiyanın başladığı tarih (16:00-00:30 gibi durumlar için)'
+    )
+    is_overnight = models.BooleanField(
+        default=False,
+        verbose_name='Gece Vardiyası',
+        help_text='Ertesi güne sarkan vardiyalar için'
+    )
+    auto_closed = models.BooleanField(
+        default=False,
+        verbose_name='Otomatik Kapatıldı',
+        help_text='Sistem tarafından kapatılan vardiyalar'
+    )
+    notes = models.TextField(
+        blank=True,
+        verbose_name='Notlar'
+    )
+
+    class Meta:
+        verbose_name = 'Vardiya Kaydı'
+        verbose_name_plural = 'Vardiya Kayıtları'
+        ordering = ['-date', '-start_time']
+        indexes = [
+            models.Index(fields=['user', 'date']),
+            models.Index(fields=['is_overnight']),
+        ]
+
+    def __str__(self):
+        status = "Açık" if self.end_time is None else "Kapalı"
+        return f"{self.user} - {self.date} | {self.start_time.strftime('%H:%M')}-{self.end_time.strftime('%H:%M') if self.end_time else 'Devam Ediyor'} ({status})"
+
+    @property
+    def duration(self):
+        """Toplam çalışma süresini hesaplar"""
+        end = self.end_time or timezone.now()
+        return end - self.start_time
+
+    @property
+    def duration_hours(self):
+        """Süreyi saat olarak döner (örn: 8.5)"""
+        return round(self.duration.total_seconds() / 3600, 2)
+
+    def close_shift(self, end_time=None):
+        """Vardiyayı manuel kapatma metodu"""
+        self.end_time = end_time or timezone.now()
+        
+        # Gece vardiyası kontrolü
+        if self.end_time.date() > self.date:
+            self.is_overnight = True
+            
+        self.save(update_fields=['end_time', 'is_overnight'])
 
 
 

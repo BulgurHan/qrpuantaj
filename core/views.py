@@ -56,7 +56,6 @@ def attendances(request):
 
 
 def calendar_summary(request):
-    # URL parametrelerinden ay ve yıl al
     today = timezone.localtime().date()
     year = int(request.GET.get('yil', today.year))
     month = int(request.GET.get('ay', today.month))
@@ -70,16 +69,28 @@ def calendar_summary(request):
         start = timezone.make_aware(datetime.combine(current_date, datetime.min.time()))
         end = start + timedelta(days=1)
 
-        logs = Attendance.objects.filter(user=user, timestamp__range=(start, end)).order_by('timestamp')
-        total_hours = 0
+        entries = Attendance.objects.filter(
+            user=user,
+            action='entry',
+            timestamp__range=(start, end)
+        ).order_by('timestamp')
 
-        if logs.count() >= 2:
-            for i in range(0, len(logs) - 1, 2):
-                entry = logs[i]
-                exit = logs[i + 1] if i + 1 < len(logs) else None
-                if exit:
-                    delta = exit.timestamp - entry.timestamp
-                    total_hours += delta.total_seconds() / 3600
+        exits = Attendance.objects.filter(
+            user=user,
+            action='exit',
+            timestamp__gte=start,
+            timestamp__lt=end + timedelta(days=1)
+        ).order_by('timestamp')
+
+        total_hours = 0
+        pair_count = min(entries.count(), exits.count())
+
+        for i in range(pair_count):
+            entry = entries[i]
+            exit = exits[i]
+            if exit.timestamp > entry.timestamp:
+                delta = exit.timestamp - entry.timestamp
+                total_hours += delta.total_seconds() / 3600
 
         if total_hours == 0:
             status = 'none'
@@ -95,9 +106,9 @@ def calendar_summary(request):
         })
 
     turkce_aylar = [
-    "", "Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran",
-    "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"
-]
+        "", "Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran",
+        "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"
+    ]
     ay_adi = turkce_aylar[month]
 
     context = {
@@ -111,6 +122,7 @@ def calendar_summary(request):
         'sonraki_yil': year + 1 if month == 12 else year,
     }
     return render(request, 'calender.html', context)
+
 
 
 
