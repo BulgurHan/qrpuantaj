@@ -38,88 +38,86 @@ def login_view(request):
 
 def attendances(request):
     user = request.user
-    attendances = Attendance.objects.filter(user=user).order_by('timestamp')
-
-    daily_records = defaultdict(dict)
-
-    for att in attendances:
-        date_str = localtime(att.timestamp).date().strftime('%Y-%m-%d')
-        if att.action == 'entry':
-            daily_records[date_str]['entry'] = localtime(att.timestamp).strftime('%H:%M:%S')
-        elif att.action == 'exit':
-            daily_records[date_str]['exit'] = localtime(att.timestamp).strftime('%H:%M:%S')
+    shifts = ShiftSession.objects.filter(user=user).order_by('date', 'start_time')
+    
+    now_date = timezone.now().date().strftime('%Y-%m-%d')  # Template'e göndereceğimiz
+    
+    daily_records = []
+    for shift in shifts:
+        record = {
+            'date': shift.date.strftime('%Y-%m-%d'),
+            'entry': shift.start_time.strftime('%H:%M:%S'),
+            'exit': shift.end_time.strftime('%H:%M:%S') if shift.end_time else None,
+            'is_overnight': shift.is_overnight,
+            'status': 'complete' if shift.end_time else 'incomplete'
+        }
+        daily_records.append(record)
 
     context = {
-        'daily_records': daily_records.items(),  # list of tuples: (date, {'entry': ..., 'exit': ...})
+        'daily_records': daily_records,
+        'now_date': now_date  # Template'de kullanılacak
     }
     return render(request, 'attendances.html', context)
 
 
 def calendar_summary(request):
-    today = timezone.localtime().date()
-    year = int(request.GET.get('yil', today.year))
-    month = int(request.GET.get('ay', today.month))
-
-    user = request.user
-    gun_sayisi = calendar.monthrange(year, month)[1]
-
-    days = []
+    # Tarih ayarları
+    bugun = timezone.localtime().date()
+    yil = int(request.GET.get('yil', bugun.year))
+    ay = int(request.GET.get('ay', bugun.month))
+    
+    # Kullanıcı ve şirket bilgisi
+    kullanici = request.user
+    sirket = kullanici.company
+    gun_sayisi = calendar.monthrange(yil, ay)[1]
+    
+    # Takvim günlerini hazırla
+    gunler = []
     for gun in range(1, gun_sayisi + 1):
-        current_date = date(year, month, gun)
-        start = timezone.make_aware(datetime.combine(current_date, datetime.min.time()))
-        end = start + timedelta(days=1)
-
-        entries = Attendance.objects.filter(
-            user=user,
-            action='entry',
-            timestamp__range=(start, end)
-        ).order_by('timestamp')
-
-        exits = Attendance.objects.filter(
-            user=user,
-            action='exit',
-            timestamp__gte=start,
-            timestamp__lt=end + timedelta(days=1)
-        ).order_by('timestamp')
-
-        total_hours = 0
-        pair_count = min(entries.count(), exits.count())
-
-        for i in range(pair_count):
-            entry = entries[i]
-            exit = exits[i]
-            if exit.timestamp > entry.timestamp:
-                delta = exit.timestamp - entry.timestamp
-                total_hours += delta.total_seconds() / 3600
-
-        if total_hours == 0:
-            status = 'none'
-        elif total_hours >= user.company.daily_work_hours:
-            status = 'full' if total_hours == user.company.daily_work_hours else 'overtime'
+        current_date = date(yil, ay, gun)
+        
+        # Vardiyaları getir
+        vardiyalar = ShiftSession.objects.filter(
+            user=kullanici,
+            date=current_date
+        )
+        
+        # Toplam çalışma süresi
+        toplam_saat = sum(
+            shift.duration.total_seconds() / 3600 
+            for shift in vardiyalar 
+            if shift.end_time
+        )
+        
+        # Durum belirleme
+        if toplam_saat == 0:
+            durum = 'yok'
+        elif toplam_saat >= sirket.daily_work_hours:
+            durum = 'tam' if toplam_saat == sirket.daily_work_hours else 'fazla-mesai'
         else:
-            status = 'missing'
-
-        days.append({
-            'date': current_date,
-            'hours': round(total_hours, 2),
-            'status': status,
+            durum = 'eksik'
+        
+        gunler.append({
+            'tarih': current_date,
+            'saat': round(toplam_saat, 2),
+            'durum': durum,
+            'vardiya_sayisi': vardiyalar.count(),
         })
 
-    turkce_aylar = [
-        "", "Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran",
-        "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"
-    ]
-    ay_adi = turkce_aylar[month]
-
+    # Türkçe ay isimleri
+    turkce_aylar = ["", "Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", 
+                    "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"]
+    
     context = {
-        'days': days,
-        'yil': year,
-        'ay': month,
-        'ay_adi': ay_adi,
-        'onceki_ay': month - 1 if month > 1 else 12,
-        'onceki_yil': year - 1 if month == 1 else year,
-        'sonraki_ay': month + 1 if month < 12 else 1,
-        'sonraki_yil': year + 1 if month == 12 else year,
+        'gunler': gunler,
+        'yil': yil,
+        'ay': ay,
+        'ay_adi': turkce_aylar[ay],
+        'onceki_ay': ay - 1 if ay > 1 else 12,
+        'onceki_yil': yil - 1 if ay == 1 else yil,
+        'sonraki_ay': ay + 1 if ay < 12 else 1,
+        'sonraki_yil': yil + 1 if ay == 12 else yil,
+        'gunluk_mesai': sirket.daily_work_hours,
     }
     return render(request, 'calender.html', context)
 
@@ -134,46 +132,32 @@ def daily_attendance_report(request):
         selected_date = timezone.now().date()
 
     company = request.user.company
-    entries = Attendance.objects.filter(
+    shifts = ShiftSession.objects.filter(
         company=company,
-        timestamp__date=selected_date
-    ).order_by('user', 'timestamp')
-
-    report = {}
-
-    for entry in entries:
-        user = entry.user
-        if user not in report:
-            report[user] = {'entry': None, 'exit': None}
-
-        if entry.action == 'entry':
-            report[user]['entry'] = entry.timestamp
-        elif entry.action == 'exit':
-            report[user]['exit'] = entry.timestamp
+        date=selected_date  # Artık direkt tarih alanını kullanıyoruz
+    ).select_related('user').order_by('user__first_name', 'start_time')
 
     rows = []
-    for user, data in report.items():
-        entry = data['entry']
-        exit = data['exit']
-        if entry and exit:
-            duration = exit - entry
-            hours = duration.total_seconds() / 3600
-            expected = user.company.daily_work_hours  # örnek: 8.0 saat
-            if hours >= expected:
-                status = '🕒 Fazla Mesai' if hours > expected else '✅ Tam Süre'
+    for shift in shifts:
+        # Süre hesaplama (gece vardiyaları dahil)
+        if shift.end_time:
+            duration = shift.duration.total_seconds() / 3600
+            expected = shift.user.company.daily_work_hours
+            if duration >= expected:
+                status = '🕒 Fazla Mesai' if duration > expected else '✅ Tam Süre'
             else:
                 status = '⚠️ Eksik Mesai'
         else:
-            hours = 0
-            status = '❌ Eksik Kayıt'
+            duration = 0
+            status = '⏳ Devam Ediyor' if shift.start_time.date() == timezone.now().date() else '❌ Eksik Çıkış'
 
         rows.append({
-            'user': user.get_full_name(),
-            'entry': entry.time().strftime('%H:%M') if entry else '-',
-            'exit': exit.time().strftime('%H:%M') if exit else '-',
-            'duration': round(hours, 2),
+            'user': shift.user.get_full_name(),
+            'entry': shift.start_time.time().strftime('%H:%M'),
+            'exit': shift.end_time.time().strftime('%H:%M') if shift.end_time else '-',
+            'duration': round(duration, 2),
             'status': status,
-            'date': selected_date
+            'is_overnight': shift.is_overnight  # Template'de özel stil için
         })
 
     return render(request, 'report.html', {
