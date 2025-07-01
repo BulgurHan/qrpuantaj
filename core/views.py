@@ -8,6 +8,8 @@ from django.utils import timezone
 from datetime import datetime, timedelta, date
 import io
 from django.shortcuts import get_object_or_404
+from django.utils.timezone import make_aware
+from django.db import transaction
 import time
 import hashlib
 import qrcode
@@ -291,16 +293,43 @@ def qr_scan_api(request):
 
 def manual_attendance_entry(request):
     if request.method == 'POST':
-        form = ManualAttendanceForm(request.POST or None, request=request)
+        form = ManualAttendanceForm(request.POST, request=request)
         if form.is_valid():
-            form.save()
-            messages.success(request, "✔️ Katılım başarıyla kaydedildi.")
+            cd = form.cleaned_data
+            user     = cd['user']
+            company  = request.user.company   # şirketi request'ten alıyoruz
+            action   = cd['action']
+            ts       = cd['timestamp']           # datetime‑local’den gelen değer
+            date_only = ts.date()
+
+            with transaction.atomic():
+                # Aynı gün & aynı action için varsa kaydı çek
+                att = Attendance.objects.filter(
+                    user=user,
+                    company=company,
+                    action=action,
+                    timestamp__date=date_only,     # ← gün bazında eşleşme
+                    added_by_hr=True               # sadece manuel olanları hedefliyoruz
+                ).first()
+
+                if att:
+                    att.timestamp = ts            # saat/dakika güncelle
+                    att.save(update_fields=['timestamp'])
+                    messages.success(request, "📝 Kayıt güncellendi ({} ⇒ {}).".format(action, ts.strftime('%H:%M')))
+                else:
+                    Attendance.objects.create(
+                        user=user,
+                        company=company,
+                        action=action,
+                        timestamp=ts,
+                        added_by_hr=True
+                    )
+                    messages.success(request, "✔️ Yeni kayıt eklendi.")
+
             return redirect('manual_attendance_entry')
-        if form.errors:
-            messages.error(request, "{}".format(form.errors))
         else:
-            messages.error(request, "❌ Lütfen formu doğru doldurun.")
+            messages.error(request, "❌ Lütfen formu kontrol edin.")
     else:
-        form = ManualAttendanceForm(request=request) 
+        form = ManualAttendanceForm(request=request)
 
     return render(request, 'manual_entry.html', {'form': form})
