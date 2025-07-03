@@ -156,3 +156,21 @@ class Attendance(models.Model):
 
     def __str__(self):
         return f"{self.user} - {self.company.name} - {self.action} @ {self.timestamp}"
+
+
+class MonthlyReport(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    company = models.ForeignKey(Company, on_delete=models.CASCADE)
+    year = models.IntegerField()
+    month = models.IntegerField()
+    total_hours = models.FloatField(default=0)
+    overtime_hours = models.FloatField(default=0)
+    missing_hours = models.FloatField(default=0)
+    status = models.CharField(max_length=20, choices=[
+        ('pending', 'Onay Bekliyor'),
+        ('approved', 'Onaylandı'),
+        ('rejected', 'Reddedildi')
+    ])
+    
+    class Meta:
+        unique_together = ('user', 'company', 'year', 'month')

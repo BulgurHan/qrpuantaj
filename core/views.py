@@ -6,6 +6,10 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.utils import timezone
 from datetime import datetime, timedelta, date
+from django.db.models import Sum, Count, Q, F, ExpressionWrapper, DurationField, DecimalField
+from django.db.models.functions import Cast
+from decimal import Decimal
+from django.http import HttpResponseForbidden, HttpResponseBadRequest
 import io
 from django.shortcuts import get_object_or_404
 from django.utils.timezone import make_aware
@@ -356,3 +360,93 @@ def manual_attendance_entry(request):
         form = ManualAttendanceForm(request=request)
 
     return render(request, 'manual_entry.html', {'form': form})
+
+
+def employee_monthly_report(request):
+    # Yetki kontrolü
+    if not request.user.is_authenticated or request.user.role not in ['company_owner', 'hr']:
+        return HttpResponseForbidden("Bu raporu görüntüleme yetkiniz yok")
+
+    selected_year = int(request.GET.get('year', timezone.now().year))
+    selected_month = int(request.GET.get('month', timezone.now().month))
+    company = request.user.company
+
+    if not company:
+        return HttpResponseBadRequest("Kullanıcının bir şirketi tanımlı değil")
+
+    # Tarih aralığı
+    _, last_day = calendar.monthrange(selected_year, selected_month)
+    start_date = date(selected_year, selected_month, 1)
+    end_date = date(selected_year, selected_month, last_day)
+
+    # Çalışanlar + vardiya süreleri
+    employees = (
+        User.objects.filter(
+            company=request.user.company,
+            is_active=True
+        )
+        .annotate( 
+            total_seconds=Sum(
+                ExpressionWrapper(
+                    F('shift_sessions__end_time') - F('shift_sessions__start_time'),
+                    output_field=DurationField()
+                ),
+                filter=Q(
+                    shift_sessions__date__gte=start_date,
+                    shift_sessions__date__lte=end_date,
+                    shift_sessions__end_time__isnull=False,
+                    shift_sessions__company=request.user.company
+                )
+            ),
+            work_days=Count(
+                'shift_sessions__date',
+                distinct=True,
+                filter=Q(
+                    shift_sessions__date__gte=start_date,
+                    shift_sessions__date__lte=end_date,
+                    shift_sessions__company=request.user.company
+                )
+            ),
+            daily_hours=Cast('company__daily_work_hours', DecimalField(max_digits=5, decimal_places=2))
+        )
+        .order_by('first_name')
+    )
+
+    # Ay adını al
+    ay_adi = calendar.month_name[selected_month]
+
+    # Rapor oluştur
+    report_data = []
+    for emp in employees:
+        total_seconds = emp.total_seconds.total_seconds() if emp.total_seconds else 0
+        total_hours = Decimal(total_seconds) / Decimal(3600)
+
+        expected_hours = emp.daily_hours * Decimal(emp.work_days) if emp.work_days else Decimal(0)
+        overtime = max(Decimal(0), total_hours - expected_hours)
+        missing = max(Decimal(0), expected_hours - total_hours)
+
+        report_data.append({
+            'user': emp,
+            'total_hours': float(round(total_hours, 2)),
+            'work_days': emp.work_days,
+            'overtime': float(round(overtime, 2)),
+            'missing': float(round(missing, 2)),
+            'status': '✅ Yeterli' if missing == 0 else '⚠️ Eksik',
+            'department': getattr(emp.branch, 'name', '-')  # branch varsa
+        })
+
+    # Ay ve yıl seçimleri için veriler
+    year_options = range(timezone.now().year - 1, timezone.now().year + 2)
+    month_options = [(i, calendar.month_name[i]) for i in range(1, 13)]
+
+    context = {
+        'report_data': report_data,
+        'year_options': year_options,
+        'month_options': month_options,
+        'selected_year': selected_year,
+        'selected_month': selected_month,
+        'ay_adi': ay_adi,
+        'company': company,
+    }
+
+    return render(request, 'monthly_report.html', context)

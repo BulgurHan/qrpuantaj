@@ -222,7 +222,14 @@
   </li>
 
   <li class="nav-item">
-    <a href="#" class="nav-link">
+  <a href="{% url "daily_attendance_report" %}" class="nav-link {% if request.resolver_match.url_name == 'daily_attendance_report' %}active{% endif %}">
+    <i class="nav-icon bi bi-calendar2-week"></i>
+    <p>Günlük Puantaj</p>
+  </a>
+</li>
+
+  <li class="nav-item">
+    <a href="{% url "employee_monthly_report" %}" class="nav-link {% if request.resolver_match.url_name == 'employee_monthly_report' %}active{% endif %}">
       <i class="nav-icon bi bi-calendar2-week"></i>
       <p>Aylık Puantaj</p>
     </a>

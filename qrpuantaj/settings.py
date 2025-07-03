@@ -43,7 +43,7 @@ INSTALLED_APPS = [
     'attendance',
 
 
-
+    'django.contrib.humanize',
     'rest_framework',
     'rest_framework_simplejwt',
 ]
