@@ -23,6 +23,37 @@
     <!--end::App Content Header-->
     <!--begin::App Content-->
     <div class="app-content">
+                  <!-- MESAI DURUM GÖSTERGESİ (YENİ EKLENEN KISIM) -->
+    <div class="container-fluid mb-4">
+      <div class="row">
+        <div class="col-12">
+          {% if mesai.basladi %}
+            <div class="alert alert-success d-flex align-items-center py-3">
+              <i class="fas fa-user-clock fs-2 me-3"></i>
+              <div>
+                <h4 class="mb-1">Mesai Başladı <span class="badge bg-white text-success ms-2">Aktif</span></h4>
+                <p class="mb-0">
+                  <strong>{{ mesai.baslangic }}</strong> itibariyle çalışıyorsunuz | 
+                  <strong>{{ mesai.sure }}</strong> geçti
+                  {% if mesai.gece_vardiyasi %}
+                    <span class="badge bg-dark ms-2">Gece Vardiyası</span>
+                  {% endif %}
+                </p>
+              </div>
+            </div>
+          {% else %}
+            <div class="alert alert-warning d-flex align-items-center py-3">
+              <i class="fas fa-door-open fs-2 me-3"></i>
+              <div>
+                <h4 class="mb-1">Mesai Başlatılmadı</h4>
+                <p class="mb-0">{{ mesai.mesaj }}</p>
+              </div>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    
       <!--begin::Container-->
       <div class="container-fluid">
         <!--begin::Row-->

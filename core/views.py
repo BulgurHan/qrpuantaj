@@ -24,8 +24,35 @@ from .models import QRToken, ShiftSession, Employee, Company, User, Attendance
 
 
 def home(request):
-    context = dict()
-    return render(request,'home.html',context)
+    # Aktif vardiyayı kontrol et
+    aktif_vardiya = ShiftSession.objects.filter(
+        user=request.user,
+        end_time__isnull=True
+    ).first()
+    
+    # Mesai bilgilerini hazırla
+    mesai_bilgisi = None
+    if aktif_vardiya:
+        calisma_suresi = timezone.now() - aktif_vardiya.start_time
+        calisma_saati = int(calisma_suresi.total_seconds() // 3600)
+        calisma_dakika = int(calisma_suresi.total_seconds() % 3600) // 60
+        
+        mesai_bilgisi = {
+            'basladi': True,
+            'baslangic': aktif_vardiya.start_time.astimezone().strftime('%H:%M'),
+            'sure': f"{calisma_saati} saat {calisma_dakika} dakika",
+            'gece_vardiyasi': aktif_vardiya.is_overnight
+        }
+    else:
+        mesai_bilgisi = {
+            'basladi': False,
+            'mesaj': "Mesai başlatılmadı"
+        }
+
+    context = {
+        'mesai': mesai_bilgisi
+    }
+    return render(request, 'home.html', context)
 
 
 def qr_scan(request):
