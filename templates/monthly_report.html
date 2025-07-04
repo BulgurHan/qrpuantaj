@@ -3,143 +3,160 @@
 {% load custom_filters %}
 
 {% block content %}
-<div class="container-fluid">
-    <!-- Filtreleme Paneli -->
-    <div class="card mb-4">
-        <div class="card-header bg-primary text-white">
-            <div class="d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Aylık Puantaj Raporu</h5>
-                <div class="dropdown">
-                    <button class="btn btn-sm btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                        İşlemler
-                    </button>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="#" id="exportExcel">
-                            <i class="fas fa-file-excel me-2"></i>Excel'e Aktar
-                        </a></li>
-                        <li><a class="dropdown-item" href="#" id="printReport">
-                            <i class="fas fa-print me-2"></i>Yazdır
-                        </a></li>
-                    </ul>
+<!--begin::App Main-->
+<main class="app-main">
+    <!--begin::App Content Header-->
+    <div class="app-content-header">
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col-sm-6"><h3 class="mb-0">🗓️ Aylık Puantaj Raporu</h3></div>
+          <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-end">
+              <li class="breadcrumb-item"><a href="{% url "home" %}">Anasayfa</a></li>
+              <li class="breadcrumb-item active">Aylık Puantaj Raporu</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="container-fluid">
+        <!-- Filtreleme Paneli -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Aylık Puantaj Raporu</h5>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            İşlemler
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#" id="exportExcel">
+                                <i class="fas fa-file-excel me-2"></i>Excel'e Aktar
+                            </a></li>
+                            <li><a class="dropdown-item" href="#" id="printReport">
+                                <i class="fas fa-print me-2"></i>Yazdır
+                            </a></li>
+                        </ul>
+                    </div>
                 </div>
             </div>
+            <div class="card-body">
+                <form method="get" class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Yıl</label>
+                        <select name="year" class="form-select">
+                            {% for year in year_options %}
+                            <option value="{{ year }}" {% if year == selected_year %}selected{% endif %}>
+                                {{ year }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Ay</label>
+                        <select name="month" class="form-select">
+                            {% for value, name in month_options %}
+                            <option value="{{ value }}" {% if value == selected_month %}selected{% endif %}>
+                                {{ name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-filter me-2"></i>Filtrele
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
-        <div class="card-body">
-            <form method="get" class="row g-3">
-                <div class="col-md-3">
-                    <label class="form-label">Yıl</label>
-                    <select name="year" class="form-select">
-                        {% for year in year_options %}
-                        <option value="{{ year }}" {% if year == selected_year %}selected{% endif %}>
-                            {{ year }}
-                        </option>
-                        {% endfor %}
-                    </select>
+
+        <!-- Rapor Tablosu -->
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">{{ company.name }} - {{ ay_adi }} {{ selected_year }}</h5>
+
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Çalışan</th>
+                                <th class="text-end">Çalışılan Gün</th>
+                                <th class="text-end">Toplam Saat</th>
+                                <th class="text-end">Fazla Mesai</th>
+                                <th class="text-end">Eksik Süre</th>
+                                <th>Durum</th>
+                                <th class="text-center">Detay</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for emp in report_data %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar me-3">
+                                            {% if emp.user.profile.photo %}
+                                            <img src="{{ emp.user.profile.photo.url }}" class="rounded-circle" width="40">
+                                            {% else %}
+                                            <span class="avatar-text bg-secondary rounded-circle">
+                                                {{ emp.user.first_name|first }}{{ emp.user.last_name|first }}
+                                            </span>
+                                            {% endif %}
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0">{{ emp.user.get_full_name }}</h6>
+                                            <small class="text-muted">{{ emp.user.department|default:"-" }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-end">{{ emp.work_days }}</td>
+                                <td class="text-end">{{ emp.total_hours|floatformat:2 }}</td>
+                                <td class="text-end text-success">{{ emp.overtime|floatformat:2 }}</td>
+                                <td class="text-end text-danger">{{ emp.missing|floatformat:2 }}</td>
+                                <td>
+                                    <span class="badge {% if emp.status == '✅ Yeterli' %}bg-success{% else %}bg-warning{% endif %}">
+                                        {{ emp.status }}
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <a href="#" 
+                                    class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-search"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center py-4">Kayıt bulunamadı</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
-                <div class="col-md-3">
-                    <label class="form-label">Ay</label>
-                    <select name="month" class="form-select">
-                        {% for value, name in month_options %}
-                        <option value="{{ value }}" {% if value == selected_month %}selected{% endif %}>
-                            {{ name }}
-                        </option>
-                        {% endfor %}
-                    </select>
+            </div>
+            <div class="card-footer bg-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="text-muted">
+                        Toplam <strong>{{ report_data|length }}</strong> çalışan
+                    </div>
+                    <div>
+                        <span class="badge bg-light text-dark me-2">
+                            Ortalama: {{ report_data|avg:'total_hours'|floatformat:2 }} saat
+                        </span>
+                        <span class="badge bg-success text-white me-2">
+                            +{{ report_data|sum_items:'overtime'|floatformat:2 }} fazla mesai
+                        </span>
+                        <span class="badge bg-danger text-white">
+                            -{{ report_data|sum_items:'missing'|floatformat:2 }} eksik süre
+                        </span>
+                    </div>
                 </div>
-                <div class="col-md-3 d-flex align-items-end">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-filter me-2"></i>Filtrele
-                    </button>
-                </div>
-            </form>
+            </div>
         </div>
     </div>
-
-    <!-- Rapor Tablosu -->
-    <div class="card">
-        <div class="card-header bg-white">
-            <h5 class="mb-0">{{ company.name }} - {{ ay_adi }} {{ selected_year }}</h5>
-
-        </div>
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover table-striped mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Çalışan</th>
-                            <th class="text-end">Çalışılan Gün</th>
-                            <th class="text-end">Toplam Saat</th>
-                            <th class="text-end">Fazla Mesai</th>
-                            <th class="text-end">Eksik Süre</th>
-                            <th>Durum</th>
-                            <th class="text-center">Detay</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for emp in report_data %}
-                        <tr>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    <div class="avatar me-3">
-                                        {% if emp.user.profile.photo %}
-                                        <img src="{{ emp.user.profile.photo.url }}" class="rounded-circle" width="40">
-                                        {% else %}
-                                        <span class="avatar-text bg-secondary rounded-circle">
-                                            {{ emp.user.first_name|first }}{{ emp.user.last_name|first }}
-                                        </span>
-                                        {% endif %}
-                                    </div>
-                                    <div>
-                                        <h6 class="mb-0">{{ emp.user.get_full_name }}</h6>
-                                        <small class="text-muted">{{ emp.user.department|default:"-" }}</small>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="text-end">{{ emp.work_days }}</td>
-                            <td class="text-end">{{ emp.total_hours|floatformat:2 }}</td>
-                            <td class="text-end text-success">{{ emp.overtime|floatformat:2 }}</td>
-                            <td class="text-end text-danger">{{ emp.missing|floatformat:2 }}</td>
-                            <td>
-                                <span class="badge {% if emp.status == '✅ Yeterli' %}bg-success{% else %}bg-warning{% endif %}">
-                                    {{ emp.status }}
-                                </span>
-                            </td>
-                            <td class="text-center">
-                                <a href="#" 
-                                   class="btn btn-sm btn-outline-primary">
-                                    <i class="fas fa-search"></i>
-                                </a>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="7" class="text-center py-4">Kayıt bulunamadı</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        <div class="card-footer bg-white">
-            <div class="d-flex justify-content-between align-items-center">
-                <div class="text-muted">
-                    Toplam <strong>{{ report_data|length }}</strong> çalışan
-                </div>
-                <div>
-                    <span class="badge bg-light text-dark me-2">
-                        Ortalama: {{ report_data|avg:'total_hours'|floatformat:2 }} saat
-                    </span>
-                    <span class="badge bg-success text-white me-2">
-                        +{{ report_data|sum_items:'overtime'|floatformat:2 }} fazla mesai
-                    </span>
-                    <span class="badge bg-danger text-white">
-                        -{{ report_data|sum_items:'missing'|floatformat:2 }} eksik süre
-                    </span>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+<main>
 
 <!-- JavaScript -->
 <script>
