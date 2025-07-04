@@ -42,7 +42,7 @@ INSTALLED_APPS = [
     'users',
     'attendance',
 
-
+    'widget_tweaks',
     'django.contrib.humanize',
     'rest_framework',
     'rest_framework_simplejwt',
@@ -144,3 +144,6 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     )
 }
+
+
+LOGIN_URL = '/login/'

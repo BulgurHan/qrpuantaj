@@ -1,0 +1,84 @@
+{% extends "base/base.html" %}
+
+{% block content %}
+<!--begin::App Main-->
+<main class="app-main">
+    <!--begin::App Content Header-->
+    <div class="app-content-header">
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col-sm-6"><h3 class="mb-0">📋 İzin Onay Listes</h3></div>
+          <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-end">
+              <li class="breadcrumb-item"><a href="{% url "home" %}">Anasayfa</a></li>
+              <li class="breadcrumb-item active">İzin Onay Listes</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+<div class="container-fluid">
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">📋 İzin Onay Listesi</h5>
+        </div>
+        <div class="card-body">
+            {% if leaves %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Çalışan</th>
+                                <th>Departman</th>
+                                <th>İzin Türü</th>
+                                <th>Tarih Aralığı</th>
+                                <th>Açıklama</th>
+                                <th>Durum</th>
+                                <th class="text-end">İşlem</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for leave in leaves %}
+                                <tr>
+                                    <td>{{ leave.employee.user.get_full_name }}</td>
+                                    <td>{{ leave.employee.department.name }}</td>
+                                    <td>{{ leave.leave_type }}</td>
+                                    <td>{{ leave.start_date }} → {{ leave.end_date }}</td>
+                                    <td>{{ leave.reason|default:"-" }}</td>
+                                    <td>
+                                        {% if leave.status == "pending" %}
+                                            <span class="badge bg-warning text-dark">Bekliyor</span>
+                                        {% elif leave.status == "approved" %}
+                                            <span class="badge bg-success">Onaylandı</span>
+                                        {% elif leave.status == "rejected" %}
+                                            <span class="badge bg-danger">Reddedildi</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end">
+                                        {% if leave.status == "pending" %}
+                                            <form method="post" action="{% url 'leave_approve' leave.id %}" class="d-inline">
+                                                {% csrf_token %}
+                                                <button type="submit" name="action" value="approve" class="btn btn-sm btn-success">Onayla</button>
+                                            </form>
+                                            <form method="post" action="{% url 'leave_approve' leave.id %}" class="d-inline">
+                                                {% csrf_token %}
+                                                <button type="submit" name="action" value="reject" class="btn btn-sm btn-danger">Reddet</button>
+                                            </form>
+                                        {% else %}
+                                            <span class="text-muted">İşlem Yapıldı</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted">Gösterilecek izin talebi bulunmamaktadır.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+</main>
+<!--end::App Main-->
+{% endblock %}

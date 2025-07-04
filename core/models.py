@@ -49,7 +49,10 @@ class Department(models.Model):
 class Employee(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True)
-
+    
+    @property
+    def company(self):
+        return self.department.branch.company if self.department else None
 
 class ShiftSession(models.Model):
     user = models.ForeignKey(
@@ -174,3 +177,26 @@ class MonthlyReport(models.Model):
     
     class Meta:
         unique_together = ('user', 'company', 'year', 'month')
+
+
+class LeaveRequest(models.Model):
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
+    company = models.ForeignKey(Company, on_delete=models.CASCADE)
+    leave_type = models.CharField(max_length=20, choices=[
+        ('annual', 'Yıllık İzin'),
+        ('sick', 'Hastalık İzni'),
+        ('unpaid', 'Ücretsiz İzin'),
+        ('other', 'Diğer'),
+    ])
+    start_date = models.DateField()
+    end_date = models.DateField()
+    reason = models.TextField(blank=True)
+    status = models.CharField(max_length=10, choices=[
+        ('pending', 'Beklemede'),
+        ('approved', 'Onaylandı'),
+        ('rejected', 'Reddedildi'),
+    ], default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.employee.user.get_full_name()} - {self.leave_type} ({self.status})"

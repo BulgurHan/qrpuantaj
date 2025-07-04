@@ -1,5 +1,5 @@
 from django import forms
-from .models import Attendance, User
+from .models import Attendance, User, LeaveRequest
 
 class ManualAttendanceForm(forms.ModelForm):
     class Meta:
@@ -30,3 +30,14 @@ class ManualAttendanceForm(forms.ModelForm):
             instance.save()
         return instance
 
+
+
+class LeaveRequestForm(forms.ModelForm):
+    class Meta:
+        model = LeaveRequest
+        fields = ['leave_type', 'start_date', 'end_date', 'reason']
+        widgets = {
+            'start_date': forms.DateInput(attrs={'type': 'date'}),
+            'end_date': forms.DateInput(attrs={'type': 'date'}),
+            'reason': forms.Textarea(attrs={'rows': 3}),
+        }

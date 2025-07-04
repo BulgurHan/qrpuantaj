@@ -12,6 +12,7 @@ from decimal import Decimal
 from django.http import HttpResponseForbidden, HttpResponseBadRequest
 import io
 from django.shortcuts import get_object_or_404
+from django.contrib.auth.decorators import login_required
 from django.utils.timezone import make_aware
 from django.db import transaction
 import time
@@ -23,8 +24,8 @@ from collections import defaultdict
 from django.utils.timezone import localtime
 from django.contrib import messages
 from users.forms import StaffForm   
-from .forms import ManualAttendanceForm
-from .models import QRToken, ShiftSession, Employee, Company, User, Attendance
+from .forms import ManualAttendanceForm, LeaveRequestForm
+from .models import QRToken, ShiftSession, Employee, Company, User, Attendance, LeaveRequest
 
 
 def home(request):
@@ -450,3 +451,42 @@ def employee_monthly_report(request):
     }
 
     return render(request, 'monthly_report.html', context)
+
+
+@login_required
+def leave_request_create(request):
+    employee = get_object_or_404(Employee, user=request.user)
+
+    if request.method == 'POST':
+        form = LeaveRequestForm(request.POST)
+        if form.is_valid():
+            leave = form.save(commit=False)
+            leave.employee = employee
+            leave.company = employee.company
+            leave.save()
+            messages.success(request, 'İzin talebiniz gönderildi.')
+            return redirect('leave_request_create')
+    else:
+        form = LeaveRequestForm()
+
+    return render(request, 'leave_create.html', {'form': form})
+
+
+@login_required
+def leave_approval_list(request):
+    if request.user.role not in ['company_owner', 'hr']:
+        return HttpResponseForbidden()
+    
+    leaves = LeaveRequest.objects.filter(company=request.user.company).order_by('-created_at')
+    return render(request, 'approval_list.html', {'leaves': leaves})
+
+
+
+@login_required
+def leave_approve(request, pk):
+    leave = get_object_or_404(LeaveRequest, pk=pk, company=request.user.company)
+    leave.status = 'approved'
+    leave.save()
+    messages.success(request, 'İzin onaylandı.')
+    return redirect('leave_approval_list')
+
