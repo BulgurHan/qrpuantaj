@@ -167,46 +167,65 @@
         }
 
         // QR kodu bulunduğunda
-        async function handleScannedCode(qrValue) {
-            scannerActive = false;
-            scanStatus.textContent = 'QR kodu tespit edildi!';
-            scanStatus.className = 'alert alert-success';
+            async function handleScannedCode(qrValue) {
+        scannerActive = false;
+        scanStatus.textContent = 'QR kodu tespit edildi!';
+        scanStatus.className = 'alert alert-success';
+        
+        try {
+            beep.play();
             
-            try {
-                beep.play();
-                
-                const response = await fetch('/api/scan-qr/', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer ' + token
-                    },
-                    body: JSON.stringify({ qr_code: qrValue })
-                });
-                
-                const data = await response.json();
-                
-                if (response.ok) {
-                    scanResult.innerHTML = `
-                        <strong>✅ Başarılı:</strong> ${data.message}<br>
-                        <strong>Şirket:</strong> ${data.company || 'Bilinmiyor'}<br>
-                        <strong>İşlem:</strong> ${data.action === 'entry' ? 'Giriş' : 'Çıkış'}
-                    `;
-                    scanResult.classList.remove('d-none');
-                } else {
-                    throw new Error(data.error || 'Geçersiz QR kodu');
-                }
-            } catch (error) {
-                console.error('API hatası:', error);
-                scanStatus.textContent = 'Hata: ' + error.message;
-                scanStatus.className = 'alert alert-danger';
-            } finally {
-                if (mediaStream) {
-                    mediaStream.getTracks().forEach(track => track.stop());
-                }
-                restartScanBtn.classList.remove('d-none');
+            // QR kodunu konsola yazdır (debug için)
+            console.log("Taranan QR Kodu:", qrValue);
+            
+            const response = await fetch('/api/scan-qr/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({ 
+                    qr_code: qrValue,
+                    scan_time: new Date().toISOString()  // Ek bilgi
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(data.error || `HTTP ${response.status}: ${response.statusText}`);
             }
+            
+            scanResult.innerHTML = `
+                <strong>✅ Başarılı:</strong> ${data.message}<br>
+                <strong>Şirket:</strong> ${data.company || 'Bilinmiyor'}<br>
+                <strong>İşlem:</strong> ${data.action === 'entry' ? 'Giriş' : 'Çıkış'}<br>
+                <small>QR: ${data.qr_code || '...'}</small>
+            `;
+            scanResult.classList.remove('d-none');
+            
+        } catch (error) {
+            console.error('Tarama hatası:', error);
+            
+            let errorMessage = error.message;
+            if (error.message.includes('404')) {
+                errorMessage = "Geçersiz QR kodu. Lütfen doğru bir şirket QR kodu tarayın.";
+            } else if (error.message.includes('401')) {
+                errorMessage = "Oturum sona erdi. Lütfen tekrar giriş yapın.";
+                localStorage.removeItem('access_token');
+                setTimeout(() => window.location.href = '/login/', 2000);
+            }
+            
+            scanStatus.textContent = 'Hata: ' + errorMessage;
+            scanStatus.className = 'alert alert-danger';
+            
+        } finally {
+            if (mediaStream) {
+                mediaStream.getTracks().forEach(track => track.stop());
+            }
+            restartScanBtn.classList.remove('d-none');
         }
+    }
 
         // Tekrar tarama butonu
         restartScanBtn.addEventListener('click', startCamera);
