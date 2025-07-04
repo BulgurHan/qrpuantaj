@@ -10,45 +10,55 @@ import time
 import hashlib
 import logging
 
+logger = logging.getLogger(__name__)
 
 def is_valid_qr(company, qr_code):
-    interval = 180
+    """
+    Dinamik QR kod doğrulama fonksiyonu
+    Her 180 saniyede (3 dakika) bir değişen kod üretir
+    """
+    interval = 180  # 3 dakika (saniye cinsinden)
     current_interval = int(time.time() // interval)
 
-    # Geçerli interval için kodu oluştur
-    valid_code = hashlib.sha256(f"{company.qr_secret}{current_interval}".encode()).hexdigest()
-
-    # Bir önceki interval için de kontrol (zaman senkronizasyonu için)
-    prev_code = hashlib.sha256(f"{company.qr_secret}{current_interval - 1}".encode()).hexdigest()
-
-    return qr_code == valid_code or qr_code == prev_code
-
-
-
-
-
-logger = logging.getLogger(__name__)
+    # Geçerli ve bir önceki interval için kodları oluştur
+    intervals_to_check = [current_interval, current_interval - 1]
+    
+    for interval_val in intervals_to_check:
+        # Şirketin secret'ı ve interval değeri ile hash oluştur
+        code_to_check = hashlib.sha256(
+            f"{company.qr_secret}{interval_val}".encode()
+        ).hexdigest()
+        
+        if qr_code == code_to_check:
+            return True
+    
+    return False
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def scan_qr(request):
     try:
         qr_code = request.data.get('qr_code', '').strip()
-        logger.info(f"QR tarama denemesi: {qr_code[:10]}...")  # Loglama
+        logger.info(f"QR tarama denemesi: {qr_code[:10]}...")
         
         if not qr_code:
             logger.warning("QR kodu boş gönderildi")
-            return Response({'error': 'QR kodu gerekli.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {'error': 'QR kodu gerekli.'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-        # Şirket kontrolünü optimize edelim
-        matched_company = Company.objects.filter(
-            qr_code__iexact=qr_code  # Büyük/küçük harf duyarsız
-        ).first()
+        # Tüm şirketlerde geçerli QR kodunu ara
+        matched_company = None
+        for company in Company.objects.all():
+            if is_valid_qr(company, qr_code):
+                matched_company = company
+                break
 
         if not matched_company:
-            logger.warning(f"Eşleşen şirket bulunamadı: {qr_code[:10]}...")
+            logger.warning(f"Geçersiz QR kodu: {qr_code[:10]}...")
             return Response(
-                {'error': 'Geçersiz QR kodu. Lütfen geçerli bir şirket QR kodu tarayın.'},
+                {'error': 'Geçersiz QR kodu veya süresi dolmuş. Lütfen yeni bir QR kodu tarayın.'},
                 status=status.HTTP_404_NOT_FOUND
             )
 
@@ -72,14 +82,18 @@ def scan_qr(request):
             action=action
         )
 
-        logger.info(f"Başarılı kayıt - Kullanıcı: {user}, Şirket: {matched_company}, İşlem: {action}")
+        logger.info(
+            f"Başarılı kayıt - Kullanıcı: {user.id}, "
+            f"Şirket: {matched_company.id}, "
+            f"İşlem: {action}"
+        )
 
         return Response({
             'message': f'{action.capitalize()} kaydı başarıyla alındı.',
             'timestamp': attendance.timestamp,
             'company': matched_company.name,
             'action': action,
-            'qr_code': qr_code[:6] + '...'  # Güvenlik için kısmi gösterim
+            'next_interval': int((time.time() // 180) + 1) * 180  # Sonraki yenileme zamanı
         }, status=status.HTTP_201_CREATED)
 
     except Exception as e:
