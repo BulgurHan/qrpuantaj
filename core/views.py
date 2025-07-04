@@ -27,7 +27,7 @@ from users.forms import StaffForm
 from .forms import ManualAttendanceForm, LeaveRequestForm
 from .models import QRToken, ShiftSession, Employee, Company, User, Attendance, LeaveRequest
 
-
+@login_required
 def home(request):
     # Aktif vardiyayı kontrol et
     aktif_vardiya = ShiftSession.objects.filter(
