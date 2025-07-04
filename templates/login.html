@@ -2,108 +2,229 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>QrPuantaj | Giriş</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="{% static 'css/adminlte.css' %}" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body { 
-      background: #f4f6f9; 
-      font-family: Arial, sans-serif; 
-      display: flex; justify-content: center; align-items: center; height: 100vh; 
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f8f9fa;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
     }
-    .login-box {
+    .login-container {
       background: white;
+      width: 100%;
+      max-width: 400px;
       padding: 2rem;
       border-radius: 8px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.2);
-      width: 320px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
-    input[type="email"], input[type="password"] {
+    .login-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .login-header h2 {
+      color: #2c3e50;
+      margin-bottom: 0.5rem;
+    }
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: #495057;
+      font-weight: 500;
+    }
+    .form-control {
       width: 100%;
-      padding: 0.6rem;
-      margin: 0.5rem 0 1rem 0;
-      border: 1px solid #ccc;
+      padding: 0.75rem;
+      border: 1px solid #ced4da;
       border-radius: 4px;
       font-size: 1rem;
+      transition: border-color 0.15s;
     }
-    button {
+    .form-control:focus {
+      border-color: #80bdff;
+      outline: 0;
+      box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+    .btn {
+      display: block;
       width: 100%;
-      padding: 0.7rem;
+      padding: 0.75rem;
       background-color: #007bff;
-      border: none;
       color: white;
-      font-weight: bold;
+      border: none;
       border-radius: 4px;
-      cursor: pointer;
       font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.15s;
     }
-    button:hover {
-      background-color: #0056b3;
+    .btn:hover {
+      background-color: #0069d9;
     }
     .alert {
+      padding: 0.75rem 1.25rem;
       margin-bottom: 1rem;
-      padding: 0.6rem;
+      border-radius: 4px;
       color: white;
       background-color: #dc3545;
-      border-radius: 4px;
       display: none;
+    }
+    .loading {
+      position: relative;
+      pointer-events: none;
+    }
+    .loading::after {
+      content: "";
+      position: absolute;
+      right: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 1rem;
+      height: 1rem;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: translateY(-50%) rotate(360deg); }
+    }
+    .password-toggle {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+    }
+    .success-alert {
+      background-color: #28a745 !important;
+    }
+    .password-wrapper {
+      position: relative;
     }
   </style>
 </head>
 <body>
-  <div class="login-box">
-    <h2>Giriş Yap</h2>
-    <div id="alert" class="alert"></div>
-    <form id="loginForm" novalidate>
+  <div class="login-container">
+    <div class="login-header">
+      <img src="{% static '/assets/img/PuantajLogo.png' %}" alt="Logo" style="height: 50px; margin-bottom: 1rem;">
+      <h2>Giriş Yap</h2>
+    </div>
+    
+    <div id="alert" class="alert" role="alert"></div>
+    
+    <form id="loginForm">
       {% csrf_token %}
-      <input type="email" id="email" placeholder="E-posta" required autocomplete="username" />
-      <input type="password" id="password" placeholder="Şifre" required autocomplete="current-password" />
-      <button type="submit">Giriş Yap</button>
+      <div class="form-group">
+        <label for="email">E-posta</label>
+        <input type="email" id="email" class="form-control" placeholder="email@example.com" required>
+      </div>
+      
+      <div class="form-group">
+        <label for="password">Şifre</label>
+        <div class="password-wrapper">
+          <input type="password" id="password" class="form-control" placeholder="Şifreniz" required>
+          <button type="button" onclick="togglePassword()" class="password-toggle">
+            👁️
+          </button>
+        </div>
+      </div>
+      
+      <button type="submit" id="submitBtn" class="btn">
+        <span id="btnText">Giriş Yap</span>
+      </button>
     </form>
   </div>
 
-  <script>
-    const alertBox = document.getElementById('alert');
-    const form = document.getElementById('loginForm');
 
-    form.addEventListener('submit', async (e) => {
+<script>
+    function togglePassword() {
+      const password = document.getElementById('password');
+      password.type = password.type === 'password' ? 'text' : 'password';
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
       e.preventDefault();
-      alertBox.style.display = 'none';
-
+      
       const email = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value.trim();
-
+      const alertBox = document.getElementById('alert');
+      const submitBtn = document.getElementById('submitBtn');
+      const btnText = document.getElementById('btnText');
+      
       if (!email || !password) {
-        alertBox.textContent = 'Lütfen tüm alanları doldur.';
-        alertBox.style.display = 'block';
+        showAlert('Lütfen tüm alanları doldurunuz.');
         return;
       }
-
+      
+      startLoading();
+      
       try {
-        const res = await fetch('/core/api/signin/', {
+        const response = await fetch('/core/api/signin/', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password }),
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+          },
+          body: JSON.stringify({ email, password })
         });
-
-        const data = await res.json();
-
-        if (res.ok && data.access) {
+        
+        const data = await response.json();
+        
+        if (response.ok) {
           localStorage.setItem('access_token', data.access);
           localStorage.setItem('refresh_token', data.refresh);
-          localStorage.setItem('email', email);
-
-          alert('Giriş başarılı!');
-          window.location.href = '/';  // QR tarama sayfası
+          showAlert('Giriş başarılı! Yönlendiriliyorsunuz...', true);
+          setTimeout(() => window.location.href = '/', 1500);
         } else {
-          alertBox.textContent = data.error || 'Giriş başarısız. Bilgileri kontrol et.';
-          alertBox.style.display = 'block';
+          showAlert(data.error || 'Giriş başarısız. Lütfen bilgilerinizi kontrol edin.');
         }
       } catch (error) {
-        alertBox.textContent = 'Sunucuya bağlanırken hata oluştu.';
-        alertBox.style.display = 'block';
+        console.error('Hata:', error);
+        showAlert('Sunucuyla bağlantı kurulamadı. Lütfen daha sonra tekrar deneyin.');
+      } finally {
+        stopLoading();
       }
+    });
+
+    // Yardımcı fonksiyonlar
+    function startLoading() {
+      document.getElementById('submitBtn').classList.add('loading');
+      document.getElementById('btnText').textContent = 'Giriş Yapılıyor...';
+      hideAlert();
+    }
+
+    function stopLoading() {
+      document.getElementById('submitBtn').classList.remove('loading');
+      document.getElementById('btnText').textContent = 'Giriş Yap';
+    }
+
+    function showAlert(message, isSuccess = false) {
+      const alertBox = document.getElementById('alert');
+      alertBox.textContent = message;
+      alertBox.style.display = 'block';
+      alertBox.className = isSuccess ? 'alert success-alert' : 'alert';
+    }
+
+    function hideAlert() {
+      document.getElementById('alert').style.display = 'none';
+    }
+
+    // Enter tuşu desteği
+    document.querySelectorAll('.form-control').forEach(input => {
+      input.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') document.getElementById('loginForm').dispatchEvent(new Event('submit'));
+      });
     });
   </script>
 </body>
