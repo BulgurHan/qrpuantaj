@@ -5,59 +5,87 @@
   <meta charset="UTF-8">
   <title>QrPuantaj | Giriş</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="{% static '/assets/img/favicon.ico' %}">
   <style>
+    :root {
+      --primary: #007bff;
+      --primary-hover: #0069d9;
+      --danger: #dc3545;
+      --success: #28a745;
+      --text: #495057;
+      --border: #ced4da;
+    }
+    
     body {
-      font-family: 'Segoe UI', Arial, sans-serif;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
       background: #f8f9fa;
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 100vh;
+      min-height: 100vh;
       margin: 0;
+      line-height: 1.5;
     }
+    
     .login-container {
       background: white;
-      width: 100%;
-      max-width: 400px;
+      width: min(90%, 400px);
       padding: 2rem;
       border-radius: 8px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      margin: 1rem;
     }
+    
     .login-header {
       text-align: center;
       margin-bottom: 2rem;
     }
+    
+    .login-header img {
+      height: 60px;
+      margin-bottom: 1rem;
+      object-fit: contain;
+    }
+    
     .login-header h2 {
       color: #2c3e50;
-      margin-bottom: 0.5rem;
+      margin: 0;
+      font-size: 1.5rem;
     }
+    
     .form-group {
       margin-bottom: 1.5rem;
     }
+    
     .form-group label {
       display: block;
       margin-bottom: 0.5rem;
-      color: #495057;
+      color: var(--text);
       font-weight: 500;
     }
+    
     .form-control {
       width: 100%;
       padding: 0.75rem;
-      border: 1px solid #ced4da;
+      border: 1px solid var(--border);
       border-radius: 4px;
       font-size: 1rem;
-      transition: border-color 0.15s;
+      transition: border-color 0.15s, box-shadow 0.15s;
     }
+    
     .form-control:focus {
       border-color: #80bdff;
       outline: 0;
       box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
     }
+    
     .btn {
-      display: block;
+      display: flex;
+      justify-content: center;
+      align-items: center;
       width: 100%;
       padding: 0.75rem;
-      background-color: #007bff;
+      background-color: var(--primary);
       color: white;
       border: none;
       border-radius: 4px;
@@ -66,37 +94,44 @@
       cursor: pointer;
       transition: background-color 0.15s;
     }
+    
     .btn:hover {
-      background-color: #0069d9;
+      background-color: var(--primary-hover);
     }
+    
     .alert {
       padding: 0.75rem 1.25rem;
       margin-bottom: 1rem;
       border-radius: 4px;
       color: white;
-      background-color: #dc3545;
+      background-color: var(--danger);
       display: none;
+      animation: fadeIn 0.3s;
     }
+    
+    .alert.success {
+      background-color: var(--success);
+    }
+    
     .loading {
       position: relative;
-      pointer-events: none;
     }
-    .loading::after {
-      content: "";
-      position: absolute;
-      right: 1rem;
-      top: 50%;
-      transform: translateY(-50%);
+    
+    .loading .spinner {
+      display: inline-block;
       width: 1rem;
       height: 1rem;
       border: 2px solid rgba(255, 255, 255, 0.3);
       border-top-color: white;
       border-radius: 50%;
       animation: spin 1s linear infinite;
+      margin-left: 0.5rem;
     }
-    @keyframes spin {
-      to { transform: translateY(-50%) rotate(360deg); }
+    
+    .password-wrapper {
+      position: relative;
     }
+    
     .password-toggle {
       position: absolute;
       right: 10px;
@@ -105,125 +140,182 @@
       background: none;
       border: none;
       cursor: pointer;
+      padding: 0.5rem;
+      color: var(--text);
+      opacity: 0.6;
+      transition: opacity 0.15s;
     }
-    .success-alert {
-      background-color: #28a745 !important;
+    
+    .password-toggle:hover {
+      opacity: 1;
     }
-    .password-wrapper {
-      position: relative;
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    @media (max-width: 480px) {
+      .login-container {
+        padding: 1.5rem;
+      }
     }
   </style>
 </head>
 <body>
   <div class="login-container">
     <div class="login-header">
-      <img src="{% static '/assets/img/PuantajLogo.png' %}" alt="Logo" style="height: 50px; margin-bottom: 1rem;">
+      <img src="{% static '/assets/img/PuantajLogo.png' %}" alt="Puantaj Logo" onerror="this.style.display='none'">
       <h2>Giriş Yap</h2>
     </div>
     
-    <div id="alert" class="alert" role="alert"></div>
+    <div id="alert" class="alert" role="alert" aria-live="assertive"></div>
     
-    <form id="loginForm">
+    <form id="loginForm" novalidate>
       {% csrf_token %}
       <div class="form-group">
         <label for="email">E-posta</label>
-        <input type="email" id="email" class="form-control" placeholder="email@example.com" required>
+        <input type="email" id="email" class="form-control" placeholder="email@example.com" required autocomplete="username">
       </div>
       
       <div class="form-group">
         <label for="password">Şifre</label>
         <div class="password-wrapper">
-          <input type="password" id="password" class="form-control" placeholder="Şifreniz" required>
-          <button type="button" onclick="togglePassword()" class="password-toggle">
-            👁️
+          <input type="password" id="password" class="form-control" placeholder="Şifreniz" required autocomplete="current-password" minlength="6">
+          <button type="button" class="password-toggle" aria-label="Şifreyi göster/gizle">
+            <span class="eye-icon">👁️</span>
           </button>
         </div>
       </div>
       
       <button type="submit" id="submitBtn" class="btn">
         <span id="btnText">Giriş Yap</span>
+        <span class="spinner" aria-hidden="true"></span>
       </button>
     </form>
   </div>
 
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Eğer zaten giriş yapılmışsa yönlendir
+      if (localStorage.getItem('access_token')) {
+        window.location.href = '/';
+      }
 
-<script>
-    function togglePassword() {
-      const password = document.getElementById('password');
-      password.type = password.type === 'password' ? 'text' : 'password';
-    }
-
-    document.getElementById('loginForm').addEventListener('submit', async function(e) {
-      e.preventDefault();
-      
-      const email = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value.trim();
+      const form = document.getElementById('loginForm');
+      const emailInput = document.getElementById('email');
+      const passwordInput = document.getElementById('password');
       const alertBox = document.getElementById('alert');
       const submitBtn = document.getElementById('submitBtn');
       const btnText = document.getElementById('btnText');
-      
-      if (!email || !password) {
-        showAlert('Lütfen tüm alanları doldurunuz.');
-        return;
-      }
-      
-      startLoading();
-      
-      try {
-        const response = await fetch('/core/api/signin/', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': '{{ csrf_token }}'
-          },
-          body: JSON.stringify({ email, password })
-        });
+      const spinner = submitBtn.querySelector('.spinner');
+      const togglePasswordBtn = document.querySelector('.password-toggle');
+
+      // Şifre göster/gizle
+      togglePasswordBtn.addEventListener('click', () => {
+        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        passwordInput.setAttribute('type', type);
+        togglePasswordBtn.setAttribute('aria-label', type === 'password' ? 'Şifreyi göster' : 'Şifreyi gizle');
+        togglePasswordBtn.querySelector('.eye-icon').textContent = type === 'password' ? '👁️' : '👁️‍🗨️';
+      });
+
+      // Form gönderimi
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
         
-        const data = await response.json();
+        const email = emailInput.value.trim();
+        const password = passwordInput.value.trim();
         
-        if (response.ok) {
-          localStorage.setItem('access_token', data.access);
-          localStorage.setItem('refresh_token', data.refresh);
-          showAlert('Giriş başarılı! Yönlendiriliyorsunuz...', true);
-          setTimeout(() => window.location.href = '/', 1500);
-        } else {
-          showAlert(data.error || 'Giriş başarısız. Lütfen bilgilerinizi kontrol edin.');
+        // Client-side validasyon
+        if (!email || !password) {
+          showAlert('Lütfen tüm alanları doldurunuz.');
+          return;
         }
-      } catch (error) {
-        console.error('Hata:', error);
-        showAlert('Sunucuyla bağlantı kurulamadı. Lütfen daha sonra tekrar deneyin.');
-      } finally {
-        stopLoading();
+        
+        if (!validateEmail(email)) {
+          showAlert('Lütfen geçerli bir e-posta adresi giriniz.');
+          return;
+        }
+        
+        startLoading();
+        
+        try {
+          const response = await fetch('/core/api/signin/', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ 
+              email: email,
+              password: password 
+            })
+          });
+          
+          const data = await response.json();
+          
+          if (response.ok) {
+            // Başarılı giriş
+            localStorage.setItem('access_token', data.access);
+            localStorage.setItem('refresh_token', data.refresh);
+            
+            showAlert('Giriş başarılı! Yönlendiriliyorsunuz...', true);
+            setTimeout(() => {
+              window.location.href = '/';
+            }, 1500);
+          } else {
+            // Hata durumu
+            showAlert(data.detail || data.error || 'Giriş başarısız. Lütfen bilgilerinizi kontrol edin.');
+          }
+        } catch (error) {
+          console.error('Hata:', error);
+          showAlert('Sunucuyla bağlantı kurulamadı. Lütfen daha sonra tekrar deneyin.');
+        } finally {
+          stopLoading();
+        }
+      });
+
+      // Yardımcı fonksiyonlar
+      function startLoading() {
+        submitBtn.disabled = true;
+        btnText.textContent = 'Giriş Yapılıyor...';
+        spinner.style.display = 'inline-block';
+        hideAlert();
       }
-    });
 
-    // Yardımcı fonksiyonlar
-    function startLoading() {
-      document.getElementById('submitBtn').classList.add('loading');
-      document.getElementById('btnText').textContent = 'Giriş Yapılıyor...';
-      hideAlert();
-    }
+      function stopLoading() {
+        submitBtn.disabled = false;
+        btnText.textContent = 'Giriş Yap';
+        spinner.style.display = 'none';
+      }
 
-    function stopLoading() {
-      document.getElementById('submitBtn').classList.remove('loading');
-      document.getElementById('btnText').textContent = 'Giriş Yap';
-    }
+      function showAlert(message, isSuccess = false) {
+        alertBox.textContent = message;
+        alertBox.className = isSuccess ? 'alert success' : 'alert';
+        alertBox.style.display = 'block';
+        alertBox.focus();
+      }
 
-    function showAlert(message, isSuccess = false) {
-      const alertBox = document.getElementById('alert');
-      alertBox.textContent = message;
-      alertBox.style.display = 'block';
-      alertBox.className = isSuccess ? 'alert success-alert' : 'alert';
-    }
+      function hideAlert() {
+        alertBox.style.display = 'none';
+      }
 
-    function hideAlert() {
-      document.getElementById('alert').style.display = 'none';
-    }
+      function validateEmail(email) {
+        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return re.test(email);
+      }
 
-    // Enter tuşu desteği
-    document.querySelectorAll('.form-control').forEach(input => {
-      input.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') document.getElementById('loginForm').dispatchEvent(new Event('submit'));
+      // Enter tuşu desteği
+      [emailInput, passwordInput].forEach(input => {
+        input.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') {
+            form.dispatchEvent(new Event('submit'));
+          }
+        });
       });
     });
   </script>

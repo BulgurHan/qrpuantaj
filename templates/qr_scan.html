@@ -2,113 +2,240 @@
 {% load static %}
 
 {% block content %}
+{% block extra_style %}
+<style>
+    .qr-scanner-container {
+        position: relative;
+        margin: 0 auto;
+        max-width: 500px;
+    }
+    
+    .scanner-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+            to bottom,
+            rgba(0, 0, 0, 0.3) 0%,
+            rgba(0, 0, 0, 0) 45%,
+            rgba(0, 0, 0, 0) 55%,
+            rgba(0, 0, 0, 0.3) 100%
+        );
+        pointer-events: none;
+    }
+    
+    #video {
+        width: 100%;
+        background: #000;
+    }
+    
+    #restartScanBtn {
+        transition: all 0.3s;
+    }
+</style>
+{% endblock extra_style %}
 <!--begin::App Main-->
 <main class="app-main">
     <!--begin::App Content Header-->
     <div class="app-content-header">
-      <!--begin::Container-->
-      <div class="container-fluid">
-        <!--begin::Row-->
-        <div class="row">
-          <div class="col-sm-6"><h3 class="mb-0">📷 QR Kodunu Tara</h3></div>
-          <div class="col-sm-6">
-            <ol class="breadcrumb float-sm-end">
-              <li class="breadcrumb-item"><a href="{% url "home" %}">Anasayfa</a></li>
-              <li class="breadcrumb-item active" aria-current="page">QR Kodunu Tara</li>
-            </ol>
-          </div>
+        <!--begin::Container-->
+        <div class="container-fluid">
+            <!--begin::Row-->
+            <div class="row">
+                <div class="col-sm-6"><h3 class="mb-0">📷 QR Kodunu Tara</h3></div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-end">
+                        <li class="breadcrumb-item"><a href="{% url "home" %}">Anasayfa</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">QR Kodunu Tara</li>
+                    </ol>
+                </div>
+            </div>
+            <!--end::Row-->
         </div>
-        <!--end::Row-->
-      </div>
-      <!--end::Container-->
+        <!--end::Container-->
     </div>
-    <div class="container py-4">
-      <div class="row justify-content-center">
-        <div class="col-md-6 text-center">
-          <h3 class="mb-4">📷 QR Kodunu Tara</h3>
-          <video id="video" autoplay playsinline class="img-fluid border border-primary rounded mb-3"></video>
-          <p id="scanResult" class="lead">QR kod bekleniyor...</p>
+    <!--end::App Content Header-->
+
+    <!--begin::App Content-->
+    <div class="app-content">
+        <div class="container-fluid">
+            <div class="row justify-content-center">
+                <div class="col-md-8 col-lg-6">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <h3 class="card-title mb-4">📷 QR Kod Tarayıcı</h3>
+                            
+                            <div class="qr-scanner-container mb-4">
+                                <video id="video" autoplay playsinline class="img-fluid border border-primary rounded"></video>
+                                <div class="scanner-overlay"></div>
+                            </div>
+                            
+                            <div id="scanStatus" class="alert alert-info">QR kod bekleniyor...</div>
+                            <div id="scanResult" class="d-none alert alert-success"></div>
+                            
+                            <button id="restartScanBtn" class="btn btn-secondary mt-3 d-none">
+                                <i class="fas fa-redo me-2"></i>Tekrar Tara
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
     </div>
+    <!--end::App Content-->
+</main>
+<!--end::App Main-->
 
-    <!-- Ses efekti -->
-    <audio id="beepSound" src="{% static 'audio/beep.wav' %}"></audio>
-  </main>
-    {% endblock %}
+<!-- Ses efekti -->
+<audio id="beepSound" preload="auto" src="{% static 'audio/beep.wav' %}"></audio>
+{% endblock %}
 
-    {% block extra_scripts %}
-    <!-- Gerekli JS -->
-    <script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.min.js"></script>
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const video = document.getElementById('video');
+        const scanStatus = document.getElementById('scanStatus');
+        const scanResult = document.getElementById('scanResult');
+        const restartScanBtn = document.getElementById('restartScanBtn');
+        const beep = document.getElementById('beepSound');
+        let scannerActive = true;
+        let mediaStream = null;
 
-    <script>
-      const video = document.getElementById('video');
-      const scanResult = document.getElementById('scanResult');
-      const token = localStorage.getItem('access_token');
-      const beep = document.getElementById('beepSound');
+        // Token kontrolü
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+            showAlert('error', 'Lütfen önce giriş yapınız', '/login/');
+            return;
+        }
 
-      if (!token) {
-        alert('🚫 Giriş yapmadan QR tarayamazsın!');
-        window.location.href = '/login/';
-      }
+        // Kamera başlatma
+        function startCamera() {
+            scannerActive = true;
+            scanStatus.textContent = 'QR kod bekleniyor...';
+            scanStatus.className = 'alert alert-info';
+            scanResult.classList.add('d-none');
+            restartScanBtn.classList.add('d-none');
 
-      navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
-        .then(stream => {
-          video.srcObject = stream;
-          video.play();
-          requestAnimationFrame(tick);
-        })
-        .catch(err => {
-          alert('❌ Kamera açılamadı: ' + err.message);
-        });
-
-      const canvas = document.createElement('canvas');
-      const context = canvas.getContext('2d');
-
-      function tick() {
-        if (video.readyState === video.HAVE_ENOUGH_DATA) {
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
-          context.drawImage(video, 0, 0, canvas.width, canvas.height);
-          const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-          const code = jsQR(imageData.data, canvas.width, canvas.height);
-
-          if (code) {
-            const qrValue = code.data;
-            scanResult.innerText = "✅ QR Kod: " + qrValue;
-            beep.play(); // bip sesi
-
-            video.srcObject.getTracks().forEach(track => track.stop());
-
-            fetch('/api/scan-qr/', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + token
-              },
-              body: JSON.stringify({ qr_code: qrValue })
+            navigator.mediaDevices.getUserMedia({ 
+                video: { 
+                    facingMode: 'environment',
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
+                } 
             })
-            .then(res => res.json())
-            .then(data => {
-              if (data.message) {
-                alert(data.message);
-              } else {
-                alert(data.error || "Bilinmeyen hata oluştu.");
-              }
+            .then(stream => {
+                mediaStream = stream;
+                video.srcObject = stream;
+                video.play();
+                requestAnimationFrame(tick);
             })
             .catch(err => {
-              alert('❌ Sunucu hatası: ' + err.message);
+                console.error('Kamera hatası:', err);
+                showAlert('error', 'Kamera erişim izni gerekiyor. Lütfen kamera iznini kontrol edin.');
+                restartScanBtn.classList.remove('d-none');
             });
-
-            return;
-          }
         }
-        requestAnimationFrame(tick);
-      }
 
-      document.getElementById('logoutBtn').addEventListener('click', () => {
-        localStorage.removeItem('access_token');
-        window.location.href = '/login/';
-      });
-    </script>
-    {% endblock %}
+        // QR tarama işlemi
+        function tick() {
+            if (!scannerActive) return;
+            
+            if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                const context = canvas.getContext('2d');
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                
+                try {
+                    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                    const code = jsQR(imageData.data, canvas.width, canvas.height);
+                    
+                    if (code) {
+                        handleScannedCode(code.data);
+                        return;
+                    }
+                } catch (e) {
+                    console.error('QR tarama hatası:', e);
+                }
+            }
+            
+            requestAnimationFrame(tick);
+        }
+
+        // QR kodu bulunduğunda
+        async function handleScannedCode(qrValue) {
+            scannerActive = false;
+            scanStatus.textContent = 'QR kodu tespit edildi!';
+            scanStatus.className = 'alert alert-success';
+            
+            try {
+                beep.play();
+                
+                const response = await fetch('/api/scan-qr/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({ qr_code: qrValue })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    scanResult.innerHTML = `
+                        <strong>✅ Başarılı:</strong> ${data.message}<br>
+                        <strong>Şirket:</strong> ${data.company || 'Bilinmiyor'}<br>
+                        <strong>İşlem:</strong> ${data.action === 'entry' ? 'Giriş' : 'Çıkış'}
+                    `;
+                    scanResult.classList.remove('d-none');
+                } else {
+                    throw new Error(data.error || 'Geçersiz QR kodu');
+                }
+            } catch (error) {
+                console.error('API hatası:', error);
+                scanStatus.textContent = 'Hata: ' + error.message;
+                scanStatus.className = 'alert alert-danger';
+            } finally {
+                if (mediaStream) {
+                    mediaStream.getTracks().forEach(track => track.stop());
+                }
+                restartScanBtn.classList.remove('d-none');
+            }
+        }
+
+        // Tekrar tarama butonu
+        restartScanBtn.addEventListener('click', startCamera);
+
+        // Hata mesajı göster
+        function showAlert(type, message, redirectUrl = null) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} text-center`;
+            alertDiv.textContent = message;
+            
+            document.querySelector('.app-content').prepend(alertDiv);
+            
+            if (redirectUrl) {
+                setTimeout(() => {
+                    window.location.href = redirectUrl;
+                }, 3000);
+            }
+        }
+
+        // Sayfa kapatılırken kamerayı kapat
+        window.addEventListener('beforeunload', () => {
+            if (mediaStream) {
+                mediaStream.getTracks().forEach(track => track.stop());
+            }
+        });
+
+        // Kamerayı başlat
+        startCamera();
+    });
+</script>
+
+{% endblock %}
