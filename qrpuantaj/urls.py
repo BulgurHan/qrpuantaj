@@ -4,7 +4,7 @@ from django.urls import path,include
 from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
-from core.views import qr_code_image,home,qr_scan,login_view,attendances, calendar_summary, daily_attendance_report,staff_list, staff_create,staff_update,company_qr_code, manual_attendance_entry, employee_monthly_report,leave_request_create,leave_approval_list,leave_approve
+from core.views import qr_code_image,home,qr_scan,login_view,attendances, calendar_summary, daily_attendance_report,staff_list, staff_create,staff_update,company_qr_code, manual_attendance_entry, employee_monthly_report,leave_request_create,leave_approval_list,leave_approve, ScheduleCreateView, EmployeeScheduleView
 from users.views import MyTokenObtainPairView 
 
 
@@ -28,6 +28,8 @@ urlpatterns = [
     path('leave-request-create/', leave_request_create, name='leave_request_create'),
     path('leave-approval-list/', leave_approval_list, name='leave_approval_list'),
     path('leave-approve/<int:pk>/', leave_approve, name='leave_approve'),
+    path('schedule/create/', ScheduleCreateView.as_view(), name='create_schedule'),
+    path('my-schedule/', EmployeeScheduleView.as_view(), name='employee_schedule'),
     path('test/', TemplateView.as_view(template_name='test.html'), name='test'),
     path('api/token/', MyTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),

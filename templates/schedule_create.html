@@ -1,0 +1,96 @@
+{% extends "base/base.html" %}
+{% block content %}
+<!--begin::App Main-->
+<main class="app-main">
+    <!--begin::App Content Header-->
+    <div class="app-content-header">
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col-sm-6"><h3 class="mb-0">Haftalık Çalışma Planı Oluştur</h3></div>
+          <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-end">
+              <li class="breadcrumb-item"><a href="{% url "home" %}">Anasayfa</a></li>
+              <li class="breadcrumb-item active">Haftalık Çalışma Planı Oluştur</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+<div class="container">
+    <form method="post" id="schedule-form">
+        {% csrf_token %}
+        
+        <!-- Ana Form (Çalışan Seçimi) -->
+        <div class="card mb-4">
+            <div class="card-header">Çalışan Bilgileri</div>
+            <div class="card-body">
+                {{ form.employee.label_tag }}
+                {{ form.employee }}
+                {{ form.week_start_date.label_tag }}
+                {{ form.week_start_date }}
+            </div>
+        </div>
+        
+        <!-- Formset -->
+        {{ formset.management_form }}
+        <div class="card">
+            <div class="card-header">Haftalık Program</div>
+            <div class="card-body">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Gün</th>
+                            <th>Başlangıç</th>
+                            <th>Bitiş</th>
+                            <th>Aktif</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for form in formset %}
+                        <tr>
+                            <td>
+                                {{ form.day }}
+                                {% if form.day.errors %}
+                                <div class="text-danger">{{ form.day.errors }}</div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {{ form.start_time }}
+                                {% if form.start_time.errors %}
+                                <div class="text-danger">{{ form.start_time.errors }}</div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {{ form.end_time }}
+                                {% if form.end_time.errors %}
+                                <div class="text-danger">{{ form.end_time.errors }}</div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {{ form.is_active }}
+                                {{ form.id }}  <!-- Gizli ID alanı -->
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <button type="submit" class="btn btn-primary">Kaydet</button>
+            </div>
+        </div>
+    </form>
+</div>
+</main>
+<!--end::App Main-->
+<!-- Tarih seçici için JS -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Hafta başlangıcını otomatik ayarla
+    const today = new Date();
+    const dayOfWeek = today.getDay(); // 0=Pazar, 1=Pazartesi, ...
+    const diff = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // En son Pazartesi'ye olan fark
+    const lastMonday = new Date(today.setDate(today.getDate() - diff));
+    
+    document.getElementById('id_week_start_date').valueAsDate = lastMonday;
+});
+</script>
+{% endblock %}

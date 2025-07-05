@@ -200,3 +200,50 @@ class LeaveRequest(models.Model):
 
     def __str__(self):
         return f"{self.employee.user.get_full_name()} - {self.leave_type} ({self.status})"
+
+
+
+class WorkSchedule(models.Model):
+    DAY_CHOICES = [
+        ('mon', 'Pazartesi'),
+        ('tue', 'Salı'),
+        ('wed', 'Çarşamba'),
+        ('thu', 'Perşembe'),
+        ('fri', 'Cuma'),
+        ('sat', 'Cumartesi'),
+        ('sun', 'Pazar')
+    ]
+    
+    employee = models.ForeignKey(
+        User, 
+        on_delete=models.CASCADE,
+        related_name='employee_schedules',
+        limit_choices_to={'role': 'staff'}
+    )
+    manager = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='manager_schedules',
+        limit_choices_to={'role__in': ['company_owner', 'hr']}
+    )
+    day = models.CharField(max_length=3, choices=DAY_CHOICES)
+    start_time = models.TimeField()
+    end_time = models.TimeField()
+    week_start_date = models.DateField()  # Haftanın başlangıç tarihi
+    is_active = models.BooleanField(default=True)
+    
+    class Meta:
+        unique_together = ('employee', 'day', 'week_start_date')
+        ordering = ['week_start_date', 'day', 'employee']
+        verbose_name = 'Çalışma Planı'
+        verbose_name_plural = 'Çalışma Planları'
+    
+    @property
+    def duration(self):
+        from datetime import datetime
+        start = datetime.combine(datetime.today(), self.start_time)
+        end = datetime.combine(datetime.today(), self.end_time)
+        return (end - start).total_seconds() / 3600
+    
+    def __str__(self):
+        return f"{self.employee} - {self.get_day_display()} {self.start_time}-{self.end_time}"

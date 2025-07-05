@@ -22,10 +22,14 @@ from io import BytesIO
 import calendar
 from collections import defaultdict
 from django.utils.timezone import localtime
+from django.views.generic import ListView, CreateView, UpdateView
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from users.forms import StaffForm   
-from .forms import ManualAttendanceForm, LeaveRequestForm
-from .models import QRToken, ShiftSession, Employee, Company, User, Attendance, LeaveRequest
+from .forms import ManualAttendanceForm, LeaveRequestForm,WorkScheduleForm,WorkScheduleFormSet
+from .models import QRToken, ShiftSession, Employee, Company, User, Attendance, LeaveRequest,WorkSchedule
+from django.urls import reverse_lazy
+
 
 @login_required
 def home(request):
@@ -490,3 +494,68 @@ def leave_approve(request, pk):
     messages.success(request, 'İzin onaylandı.')
     return redirect('leave_approval_list')
 
+
+
+
+class ScheduleCreateView(LoginRequiredMixin, CreateView):
+    model = WorkSchedule
+    form_class = WorkScheduleForm
+    template_name = 'schedule_create.html'
+    success_url = reverse_lazy('schedule_view')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.request.POST:
+            context['formset'] = WorkScheduleFormSet(
+                self.request.POST,
+                prefix='schedules',
+                queryset=WorkSchedule.objects.none()
+            )
+        else:
+            context['formset'] = WorkScheduleFormSet(
+                queryset=WorkSchedule.objects.none(),
+                prefix='schedules'
+            )
+        return context
+
+    def form_valid(self, form):
+        context = self.get_context_data()
+        formset = context['formset']
+        
+        if formset.is_valid():
+            form.instance.manager = self.request.user
+            self.object = form.save()
+            
+            instances = formset.save(commit=False)
+            for instance in instances:
+                # Eğer gün seçilmemişse bu kaydı atla
+                if not instance.day:
+                    continue
+                    
+                # Zorunlu alanları kontrol et
+                if not instance.start_time:
+                    form.add_error(None, "Başlangıç saati boş bırakılamaz")
+                    return self.form_invalid(form)
+                
+                instance.employee = form.cleaned_data['employee']
+                instance.manager = self.request.user
+                instance.week_start_date = form.cleaned_data['week_start_date']
+                instance.save()
+            return super().form_valid(form)
+        else:
+            return self.render_to_response(self.get_context_data(form=form))
+
+class EmployeeScheduleView(LoginRequiredMixin, ListView):
+    model = WorkSchedule
+    template_name = 'schedule_view.html'
+    
+    def get_queryset(self):
+        return WorkSchedule.objects.filter(
+            employee=self.request.user,
+            week_start_date=self.get_week_start(),
+            is_active=True
+        ).order_by('day')
+    
+    def get_week_start(self):
+        # Haftalık görünüm için
+        return date.today() - timedelta(days=date.today().weekday())

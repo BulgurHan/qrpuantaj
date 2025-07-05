@@ -1,0 +1,57 @@
+{% extends "base/base.html" %}
+{% block content %}
+<!--begin::App Main-->
+<main class="app-main">
+    <!--begin::App Content Header-->
+    <div class="app-content-header">
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col-sm-6"><h3 class="mb-0">Haftalık Çalışma Planım</h3></div>
+          <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-end">
+              <li class="breadcrumb-item"><a href="{% url "home" %}">Anasayfa</a></li>
+              <li class="breadcrumb-item active">Haftalık Çalışma Planım</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+<div class="container">
+    <div class="d-flex justify-content-between mb-4">
+        <a href="?week_offset={{ week_offset|add:'-1' }}" class="btn btn-secondary">← Önceki Hafta</a>
+        <h4>{{ week_start|date:"d M Y" }} - {{ week_end|date:"d M Y" }}</h4>
+        <a href="?week_offset={{ week_offset|add:'1' }}" class="btn btn-secondary">Sonraki Hafta →</a>
+    </div>
+    
+    <div class="card">
+        <div class="card-body">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Gün</th>
+                        <th>Başlangıç</th>
+                        <th>Bitiş</th>
+                        <th>Süre</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for schedule in object_list %}
+                    <tr>
+                        <td>{{ schedule.get_day_display }}</td>
+                        <td>{{ schedule.start_time|time:"H:i" }}</td>
+                        <td>{{ schedule.end_time|time:"H:i" }}</td>
+                        <td>{{ schedule.duration|floatformat:2 }} saat</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4">Planlanmış çalışma bulunamadı</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</main>
+<!--end::App Main-->
+{% endblock %}
