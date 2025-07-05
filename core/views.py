@@ -501,7 +501,7 @@ class ScheduleCreateView(LoginRequiredMixin, CreateView):
     model = WorkSchedule
     form_class = WorkScheduleForm
     template_name = 'schedule_create.html'
-    success_url = reverse_lazy('schedule_view')
+    success_url = reverse_lazy('employee_schedule')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -527,22 +527,28 @@ class ScheduleCreateView(LoginRequiredMixin, CreateView):
             self.object = form.save()
             
             instances = formset.save(commit=False)
-            for instance in instances:
-                # Eğer gün seçilmemişse bu kaydı atla
-                if not instance.day:
+            for i, instance in enumerate(instances):
+                print(f"Processing instance {i}:")  # Debug için
+                print(f"Day: {instance.day}")  # Debug için
+                print(f"Start Time: {instance.start_time}")  # Debug için
+                print(f"End Time: {instance.end_time}")  # Debug için
+                
+                if not instance.day:  # Boş formları atla
                     continue
                     
-                # Zorunlu alanları kontrol et
-                if not instance.start_time:
-                    form.add_error(None, "Başlangıç saati boş bırakılamaz")
-                    return self.form_invalid(form)
-                
                 instance.employee = form.cleaned_data['employee']
                 instance.manager = self.request.user
                 instance.week_start_date = form.cleaned_data['week_start_date']
+                
+                # DEBUG: start_time kontrolü
+                if instance.start_time is None:
+                    print(f"ERROR: start_time is None for day {instance.day}")
+                    instance.start_time = time(9, 0)  # Fallback değer
+                
                 instance.save()
             return super().form_valid(form)
         else:
+            print("Formset errors:", formset.errors)  # Formset hatalarını gör
             return self.render_to_response(self.get_context_data(form=form))
 
 class EmployeeScheduleView(LoginRequiredMixin, ListView):

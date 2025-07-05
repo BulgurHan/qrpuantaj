@@ -64,23 +64,21 @@ WorkScheduleFormSet = modelformset_factory(
     can_delete=False,
     fields=('day', 'start_time', 'end_time', 'is_active'),
     widgets={
-        'day': forms.Select(attrs={
-            'class': 'form-control',
-            'required': 'required'
-        }),
+        'day': forms.Select(attrs={'class': 'form-control'}),
         'start_time': forms.TimeInput(attrs={
             'type': 'time',
             'class': 'form-control',
             'required': 'required'
         }),
         'end_time': forms.TimeInput(attrs={
-            'type': 'time', 
+            'type': 'time',
             'class': 'form-control',
             'required': 'required'
         }),
         'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'})
     },
-    # Boş formları yoksay
+    # Aşağıdaki ayarları ekleyin
     validate_min=True,
-    min_num=1  # En az 1 geçerli form olmalı
+    min_num=1,
+    exclude=()  # Açıkça belirtmek için
 )

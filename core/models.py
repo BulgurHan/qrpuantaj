@@ -227,8 +227,8 @@ class WorkSchedule(models.Model):
         limit_choices_to={'role__in': ['company_owner', 'hr']}
     )
     day = models.CharField(max_length=3, choices=DAY_CHOICES)
-    start_time = models.TimeField()
-    end_time = models.TimeField()
+    start_time = models.TimeField(null=True)  # Geçici olarak null'a izin ver
+    end_time = models.TimeField(null=True)
     week_start_date = models.DateField()  # Haftanın başlangıç tarihi
     is_active = models.BooleanField(default=True)
     
