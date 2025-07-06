@@ -199,125 +199,138 @@
     </form>
   </div>
 
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      // Eğer zaten giriş yapılmışsa yönlendir
-      if (localStorage.getItem('access_token')) {
-        window.location.href = '/';
-      }
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const access = localStorage.getItem('access_token');
 
-      const form = document.getElementById('loginForm');
-      const emailInput = document.getElementById('email');
-      const passwordInput = document.getElementById('password');
-      const alertBox = document.getElementById('alert');
-      const submitBtn = document.getElementById('submitBtn');
-      const btnText = document.getElementById('btnText');
-      const spinner = submitBtn.querySelector('.spinner');
-      const togglePasswordBtn = document.querySelector('.password-toggle');
+    // Token varsa geçerli mi kontrol et
+    if (access) {
+      try {
+        const payload = JSON.parse(atob(access.split('.')[1]));
+        const isExpired = payload.exp * 1000 < Date.now();
 
-      // Şifre göster/gizle
-      togglePasswordBtn.addEventListener('click', () => {
-        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-        passwordInput.setAttribute('type', type);
-        togglePasswordBtn.setAttribute('aria-label', type === 'password' ? 'Şifreyi göster' : 'Şifreyi gizle');
-        togglePasswordBtn.querySelector('.eye-icon').textContent = type === 'password' ? '👁️' : '👁️‍🗨️';
-      });
-
-      // Form gönderimi
-      form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const email = emailInput.value.trim();
-        const password = passwordInput.value.trim();
-        
-        // Client-side validasyon
-        if (!email || !password) {
-          showAlert('Lütfen tüm alanları doldurunuz.');
-          return;
+        if (!isExpired) {
+          window.location.href = '/';
+        } else {
+          localStorage.removeItem('access_token');
+          localStorage.removeItem('refresh_token');
         }
-        
-        if (!validateEmail(email)) {
-          showAlert('Lütfen geçerli bir e-posta adresi giriniz.');
-          return;
-        }
-        
-        startLoading();
-        
-        try {
-          const response = await fetch('/core/api/signin/', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-CSRFToken': '{{ csrf_token }}'
-            },
-            body: JSON.stringify({ 
-              email: email,
-              password: password 
-            })
-          });
-          
-          const data = await response.json();
-          
-          if (response.ok) {
-            // Başarılı giriş
-            localStorage.setItem('access_token', data.access);
-            localStorage.setItem('refresh_token', data.refresh);
-            
-            showAlert('Giriş başarılı! Yönlendiriliyorsunuz...', true);
-            setTimeout(() => {
-              window.location.href = '/';
-            }, 1500);
-          } else {
-            // Hata durumu
-            showAlert(data.detail || data.error || 'Giriş başarısız. Lütfen bilgilerinizi kontrol edin.');
-          }
-        } catch (error) {
-          console.error('Hata:', error);
-          showAlert('Sunucuyla bağlantı kurulamadı. Lütfen daha sonra tekrar deneyin.');
-        } finally {
-          stopLoading();
-        }
-      });
+      } catch (e) {
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+      }
+    }
 
-      // Yardımcı fonksiyonlar
-      function startLoading() {
-        submitBtn.disabled = true;
-        btnText.textContent = 'Giriş Yapılıyor...';
-        spinner.style.display = 'inline-block';
-        hideAlert();
+    const form = document.getElementById('loginForm');
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    const alertBox = document.getElementById('alert');
+    const submitBtn = document.getElementById('submitBtn');
+    const btnText = document.getElementById('btnText');
+    const spinner = submitBtn.querySelector('.spinner');
+    const togglePasswordBtn = document.querySelector('.password-toggle');
+
+    // Şifre göster/gizle
+    togglePasswordBtn.addEventListener('click', () => {
+      const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+      passwordInput.setAttribute('type', type);
+      togglePasswordBtn.setAttribute('aria-label', type === 'password' ? 'Şifreyi göster' : 'Şifreyi gizle');
+      togglePasswordBtn.querySelector('.eye-icon').textContent = type === 'password' ? '👁️' : '👁️‍🗨️';
+    });
+
+    // Form gönderimi
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const email = emailInput.value.trim();
+      const password = passwordInput.value.trim();
+
+      if (!email || !password) {
+        showAlert('Lütfen tüm alanları doldurunuz.');
+        return;
       }
 
-      function stopLoading() {
-        submitBtn.disabled = false;
-        btnText.textContent = 'Giriş Yap';
-        spinner.style.display = 'none';
+      if (!validateEmail(email)) {
+        showAlert('Lütfen geçerli bir e-posta adresi giriniz.');
+        return;
       }
 
-      function showAlert(message, isSuccess = false) {
-        alertBox.textContent = message;
-        alertBox.className = isSuccess ? 'alert success' : 'alert';
-        alertBox.style.display = 'block';
-        alertBox.focus();
-      }
+      startLoading();
 
-      function hideAlert() {
-        alertBox.style.display = 'none';
-      }
-
-      function validateEmail(email) {
-        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return re.test(email);
-      }
-
-      // Enter tuşu desteği
-      [emailInput, passwordInput].forEach(input => {
-        input.addEventListener('keypress', (e) => {
-          if (e.key === 'Enter') {
-            form.dispatchEvent(new Event('submit'));
-          }
+      try {
+        const response = await fetch('/core/api/signin/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+          },
+          body: JSON.stringify({
+            email: email,
+            password: password
+          })
         });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          localStorage.setItem('access_token', data.access);
+          localStorage.setItem('refresh_token', data.refresh);
+
+          showAlert('Giriş başarılı! Yönlendiriliyorsunuz...', true);
+          setTimeout(() => {
+            window.location.href = '/';
+          }, 1500);
+        } else {
+          showAlert(data.detail || data.error || 'Giriş başarısız. Lütfen bilgilerinizi kontrol edin.');
+        }
+      } catch (error) {
+        console.error('Hata:', error);
+        showAlert('Sunucuyla bağlantı kurulamadı. Lütfen daha sonra tekrar deneyin.');
+      } finally {
+        stopLoading();
+      }
+    });
+
+    // Yardımcı fonksiyonlar
+    function startLoading() {
+      submitBtn.disabled = true;
+      btnText.textContent = 'Giriş Yapılıyor...';
+      spinner.style.display = 'inline-block';
+      hideAlert();
+    }
+
+    function stopLoading() {
+      submitBtn.disabled = false;
+      btnText.textContent = 'Giriş Yap';
+      spinner.style.display = 'none';
+    }
+
+    function showAlert(message, isSuccess = false) {
+      alertBox.textContent = message;
+      alertBox.className = isSuccess ? 'alert success' : 'alert';
+      alertBox.style.display = 'block';
+      alertBox.focus();
+    }
+
+    function hideAlert() {
+      alertBox.style.display = 'none';
+    }
+
+    function validateEmail(email) {
+      const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      return re.test(email);
+    }
+
+    // Enter tuşu desteği
+    [emailInput, passwordInput].forEach(input => {
+      input.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          form.dispatchEvent(new Event('submit'));
+        }
       });
     });
-  </script>
+  });
+</script>
+
 </body>
 </html>
