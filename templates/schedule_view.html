@@ -36,17 +36,18 @@
                 </thead>
                 <tbody>
                     {% for schedule in object_list %}
+                    {% if schedule.start_time and schedule.end_time %}
                     <tr>
                         <td>{{ schedule.get_day_display }}</td>
                         <td>{{ schedule.start_time|time:"H:i" }}</td>
                         <td>{{ schedule.end_time|time:"H:i" }}</td>
                         <td>{{ schedule.duration|floatformat:2 }} saat</td>
                     </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="4">Planlanmış çalışma bulunamadı</td>
-                    </tr>
-                    {% endfor %}
+                    {% endif %}
+                {% empty %}
+                    <tr><td colspan="4">Planlanmış çalışma bulunamadı</td></tr>
+                {% endfor %}
+                
                 </tbody>
             </table>
         </div>

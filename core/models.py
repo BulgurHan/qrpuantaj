@@ -4,6 +4,7 @@ from datetime import timedelta
 from users.models import User  
 from django.contrib.auth import get_user_model
 import uuid
+from datetime import datetime
 
 
 User = get_user_model()
@@ -238,12 +239,14 @@ class WorkSchedule(models.Model):
         verbose_name = 'Çalışma Planı'
         verbose_name_plural = 'Çalışma Planları'
     
+
     @property
     def duration(self):
-        from datetime import datetime
-        start = datetime.combine(datetime.today(), self.start_time)
-        end = datetime.combine(datetime.today(), self.end_time)
-        return (end - start).total_seconds() / 3600
+        if self.start_time and self.end_time:
+            start = datetime.combine(datetime.today(), self.start_time)
+            end = datetime.combine(datetime.today(), self.end_time)
+            return (end - start).total_seconds() / 3600
+        return 0
     
     def __str__(self):
         return f"{self.employee} - {self.get_day_display()} {self.start_time}-{self.end_time}"

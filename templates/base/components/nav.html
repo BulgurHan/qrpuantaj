@@ -166,11 +166,12 @@
   </li>
 
   <li class="nav-item">
-    <a href="{% url "manual_attendance_entry" %}" class="nav-link">
-      <i class="nav-icon bi bi-qr-code"></i>
-      <p>Manuel Kayıt Ekle</p>
+    <a href="{% url 'employee_schedule' %}" 
+      class="nav-link {% if request.resolver_match.url_name == 'employee_schedule' %}active{% endif %}">
+      <i class="nav-icon bi bi-calendar-week"></i>
+      <p>Haftalık Plan</p>
     </a>
-  </li>
+</li>
 
   <li class="nav-item">
     <a href="#" class="nav-link">

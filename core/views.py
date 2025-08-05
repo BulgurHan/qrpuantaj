@@ -556,12 +556,24 @@ class EmployeeScheduleView(LoginRequiredMixin, ListView):
     template_name = 'schedule_view.html'
     
     def get_queryset(self):
-        return WorkSchedule.objects.filter(
+        queryset = WorkSchedule.objects.filter(
             employee=self.request.user,
             week_start_date=self.get_week_start(),
             is_active=True
-        ).order_by('day')
-    
+        )
+
+        day_order = {
+            'mon': 0,
+            'tue': 1,
+            'wed': 2,
+            'thu': 3,
+            'fri': 4,
+            'sat': 5,
+            'sun': 6
+        }
+
+        return sorted(queryset, key=lambda s: day_order.get(s.day, 99))
+
     def get_week_start(self):
         # Haftalık görünüm için
         return date.today() - timedelta(days=date.today().weekday())
