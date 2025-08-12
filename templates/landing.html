@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Puantaj - Akıllı Mesai Takip Sistemi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .gradient-bg { background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%); }
+        .qr-animation { animation: pulse 2s infinite; }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        .feature-card:hover { transform: translateY(-5px); transition: all 0.3s ease; }
+        .pricing-card:hover { transform: translateY(-10px); box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
+    </style>
+</head>
+<body class="bg-white text-gray-900">
+    <!-- Navigation -->
+    <nav class="fixed w-full bg-white/95 backdrop-blur-sm z-50 border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 bg-black rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M3 3h6v6H3V3zm2 2v2h2V5H5zM3 15h6v6H3v-6zm2 2v2h2v-2H5zM15 3h6v6h-6V3zm2 2v2h2V5h-2zM13 7h2v2h-2V7zm0 4h2v2h-2v-2zm-2 0h2v2H9v-2zm2 2h2v2h-2v-2zm0 2h2v2h-2v-2zm2 2h2v2h-2v-2zm0-2h2v2h-2v-2zm2 0h2v2h-2v-2zm-4 4h2v2h-2v-2zm2-2h2v2h-2v-2zm0-2h2v2h-2v-2z"/>
+                        </svg>
+                    </div>
+                    <span class="text-xl font-bold text-black">QR Puantaj</span>
+                </div>
+                <div class="hidden md:flex space-x-8">
+                    <a href="#ozellikler" class="text-gray-600 hover:text-black transition-colors">Özellikler</a>
+                    <a href="#nasil-calisir" class="text-gray-600 hover:text-black transition-colors">Nasıl Çalışır</a>
+                    <a href="#fiyatlandirma" class="text-gray-600 hover:text-black transition-colors">Fiyatlandırma</a>
+                    <a href="#iletisim" class="text-gray-600 hover:text-black transition-colors">İletişim</a>
+                </div>
+                <button class="bg-black text-white px-6 py-2 rounded-lg hover:bg-gray-800 transition-colors">
+                    Demo İste
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="gradient-bg text-white pt-24 pb-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid lg:grid-cols-2 gap-12 items-center">
+                <div>
+                    <h1 class="text-5xl lg:text-6xl font-bold mb-6 leading-tight">
+                        QR Kod ile<br>
+                        <span class="text-gray-300">Akıllı Mesai</span><br>
+                        Takip Sistemi
+                    </h1>
+                    <p class="text-xl text-gray-300 mb-8 leading-relaxed">
+                        Çalışanlarınız QR kod okutarak mesaiye başlıyor, bitiriyor. Tüm raporlar otomatik olarak yöneticilere ulaşıyor. Kolay, hızlı ve güvenilir.
+                    </p>
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <button class="bg-white text-black px-8 py-4 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
+                            Ücretsiz Dene
+                        </button>
+                        <button class="border border-white text-white px-8 py-4 rounded-lg font-semibold hover:bg-white hover:text-black transition-colors">
+                            Demo İzle
+                        </button>
+                    </div>
+                </div>
+                <div class="flex justify-center">
+                    <div class="qr-animation bg-white p-8 rounded-2xl shadow-2xl">
+                        <svg class="w-64 h-64" viewBox="0 0 200 200" fill="none">
+                            <!-- QR Code Pattern -->
+                            <rect width="200" height="200" fill="white"/>
+                            <rect x="10" y="10" width="60" height="60" fill="black"/>
+                            <rect x="20" y="20" width="40" height="40" fill="white"/>
+                            <rect x="30" y="30" width="20" height="20" fill="black"/>
+                            
+                            <rect x="130" y="10" width="60" height="60" fill="black"/>
+                            <rect x="140" y="20" width="40" height="40" fill="white"/>
+                            <rect x="150" y="30" width="20" height="20" fill="black"/>
+                            
+                            <rect x="10" y="130" width="60" height="60" fill="black"/>
+                            <rect x="20" y="140" width="40" height="40" fill="white"/>
+                            <rect x="30" y="150" width="20" height="20" fill="black"/>
+                            
+                            <!-- Data pattern -->
+                            <rect x="80" y="20" width="10" height="10" fill="black"/>
+                            <rect x="100" y="20" width="10" height="10" fill="black"/>
+                            <rect x="80" y="40" width="10" height="10" fill="black"/>
+                            <rect x="110" y="40" width="10" height="10" fill="black"/>
+                            <rect x="90" y="50" width="10" height="10" fill="black"/>
+                            <rect x="20" y="80" width="10" height="10" fill="black"/>
+                            <rect x="40" y="80" width="10" height="10" fill="black"/>
+                            <rect x="60" y="80" width="10" height="10" fill="black"/>
+                            <rect x="80" y="80" width="10" height="10" fill="black"/>
+                            <rect x="100" y="80" width="10" height="10" fill="black"/>
+                            <rect x="120" y="80" width="10" height="10" fill="black"/>
+                            <rect x="140" y="80" width="10" height="10" fill="black"/>
+                            <rect x="160" y="80" width="10" height="10" fill="black"/>
+                            <rect x="180" y="80" width="10" height="10" fill="black"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="ozellikler" class="py-20 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold text-black mb-4">Neden QR Puantaj?</h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    Modern işletmeler için tasarlanmış, kolay kullanımlı ve güvenilir mesai takip sistemi
+                </p>
+            </div>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="feature-card bg-white p-8 rounded-xl shadow-lg">
+                    <div class="w-16 h-16 bg-black rounded-lg flex items-center justify-center mb-6">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-4">Hızlı Giriş-Çıkış</h3>
+                    <p class="text-gray-600">QR kod okutarak saniyeler içinde mesaiye başlayın veya bitirin. Karmaşık işlemler yok.</p>
+                </div>
+                <div class="feature-card bg-white p-8 rounded-xl shadow-lg">
+                    <div class="w-16 h-16 bg-black rounded-lg flex items-center justify-center mb-6">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-4">Otomatik Raporlama</h3>
+                    <p class="text-gray-600">Tüm mesai verileri otomatik olarak toplanır ve yöneticilere anlık raporlar gönderilir.</p>
+                </div>
+                <div class="feature-card bg-white p-8 rounded-xl shadow-lg">
+                    <div class="w-16 h-16 bg-black rounded-lg flex items-center justify-center mb-6">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-4">Güvenli & Güvenilir</h3>
+                    <p class="text-gray-600">Verileriniz şifreli olarak saklanır. Manipülasyon yapılamaz, her işlem kayıt altına alınır.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section id="nasil-calisir" class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold text-black mb-4">Nasıl Çalışır?</h2>
+                <p class="text-xl text-gray-600">3 basit adımda mesai takibini dijitalleştirin</p>
+            </div>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="text-center">
+                    <div class="w-20 h-20 bg-black text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-6">1</div>
+                    <h3 class="text-xl font-semibold mb-4">QR Kod Okut</h3>
+                    <p class="text-gray-600">Çalışanlar telefon kamerası ile QR kodu okutarak mesaiye başlar</p>
+                </div>
+                <div class="text-center">
+                    <div class="w-20 h-20 bg-black text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-6">2</div>
+                    <h3 class="text-xl font-semibold mb-4">Çalış & Kaydet</h3>
+                    <p class="text-gray-600">Sistem otomatik olarak çalışma saatlerini takip eder ve kaydeder</p>
+                </div>
+                <div class="text-center">
+                    <div class="w-20 h-20 bg-black text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-6">3</div>
+                    <h3 class="text-xl font-semibold mb-4">Rapor Al</h3>
+                    <p class="text-gray-600">Mesai bitiminde tekrar QR okut, raporlar otomatik olarak yöneticiye gider</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section id="fiyatlandirma" class="py-20 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold text-black mb-4">Fiyatlandırma</h2>
+                <p class="text-xl text-gray-600">İşletmenizin büyüklüğüne uygun paket seçin</p>
+            </div>
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Basic Plan -->
+                <div class="pricing-card bg-white rounded-2xl p-8 shadow-lg transition-all duration-300">
+                    <div class="text-center">
+                        <h3 class="text-2xl font-bold mb-4">Başlangıç</h3>
+                        <div class="mb-6">
+                            <span class="text-4xl font-bold">₺299</span>
+                            <span class="text-gray-600">/ay</span>
+                        </div>
+                        <p class="text-gray-600 mb-8">Küçük işletmeler için ideal</p>
+                    </div>
+                    <ul class="space-y-4 mb-8">
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                            10 çalışana kadar
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                            Temel raporlama
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                            Email desteği
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                            Mobil uygulama
+                        </li>
+                    </ul>
+                    <button class="w-full bg-gray-900 text-white py-3 rounded-lg hover:bg-gray-800 transition-colors">
+                        Başla
+                    </button>
+                </div>
+
+                <!-- Professional Plan -->
+                <div class="pricing-card bg-black text-white rounded-2xl p-8 shadow-2xl transform scale-105 transition-all duration-300">
+                    <div class="text-center">
+                        <div class="bg-white text-black px-4 py-1 rounded-full text-sm font-semibold mb-4 inline-block">
+                            En Popüler
+                        </div>
+                        <h3 class="text-2xl font-bold mb-4">Profesyonel</h3>
+                        <div class="mb-6">
+                            <span class="text-4xl font-bold">₺599</span>
+                            <span class="text-gray-300">/ay</span>
+                        </div>
+                        <p class="text-gray-300 mb-8">Orta ölçekli işletmeler için</p>
+                    </div>
+                    <ul class="space-y-4 mb-8">
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 text-green-400 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                            50 çalışana kadar
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 text-green-400 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                            Gelişmiş raporlama
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 text-green-400 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                            Öncelikli destek
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 text-green-400 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                            API entegrasyonu
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 text-green-400 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                            Özel QR kodlar
+                        </li>
+                    </ul>
+                    <button class="w-full bg-white text-black py-3 rounded-lg hover:bg-gray-100 transition-colors font-semibold">
+                        Başla
+                    </button>
+                </div>
+
+                <!-- Enterprise Plan -->
+                <div class="pricing-card bg-white rounded-2xl p-8 shadow-lg transition-all duration-300">
+                    <div class="text-center">
+                        <h3 class="text-2xl font-bold mb-4">Kurumsal</h3>
+                        <div class="mb-6">
+                            <span class="text-4xl font-bold">₺1299</span>
+                            <span class="text-gray-600">/ay</span>
+                        </div>
+                        <p class="text-gray-600 mb-8">Büyük işletmeler için</p>
+                    </div>
+                    <ul class="space-y-4 mb-8">
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                            Sınırsız çalışan
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                            Özel raporlar
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                            7/24 destek
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                            Özel entegrasyonlar
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                            Özel eğitim
+                        </li>
+                    </ul>
+                    <button class="w-full bg-gray-900 text-white py-3 rounded-lg hover:bg-gray-800 transition-colors">
+                        İletişime Geç
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="gradient-bg text-white py-20">
+        <div class="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
+            <h2 class="text-4xl font-bold mb-6">Hemen Başlayın</h2>
+            <p class="text-xl text-gray-300 mb-8">
+                QR Puantaj ile mesai takibini dijitalleştirin. 14 gün ücretsiz deneyin, kredi kartı gerektirmez.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <button class="bg-white text-black px-8 py-4 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
+                    Ücretsiz Deneme Başlat
+                </button>
+                <button class="border border-white text-white px-8 py-4 rounded-lg font-semibold hover:bg-white hover:text-black transition-colors">
+                    Satış Ekibi ile Görüş
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer id="iletisim" class="bg-black text-white py-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-4 gap-8">
+                <div>
+                    <div class="flex items-center space-x-2 mb-6">
+                        <div class="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
+                            <svg class="w-5 h-5 text-black" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M3 3h6v6H3V3zm2 2v2h2V5H5zM3 15h6v6H3v-6zm2 2v2h2v-2H5zM15 3h6v6h-6V3zm2 2v2h2V5h-2z"/>
+                            </svg>
+                        </div>
+                        <span class="text-xl font-bold">QR Puantaj</span>
+                    </div>
+                    <p class="text-gray-400">
+                        Akıllı mesai takip sistemi ile işletmenizi dijitalleştirin.
+                    </p>
+                </div>
+                <div>
+                    <h3 class="font-semibold mb-4">Ürün</h3>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#" class="hover:text-white transition-colors">Özellikler</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Fiyatlandırma</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Demo</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">API</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="font-semibold mb-4">Destek</h3>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#" class="hover:text-white transition-colors">Yardım Merkezi</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">İletişim</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Durum</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Güvenlik</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="font-semibold mb-4">İletişim</h3>
+                    <ul class="space-y-2 text-gray-400">
+                        <li>info@qrpuantaj.com</li>
+                        <li>+90 (212) 555 0123</li>
+                        <li>İstanbul, Türkiye</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 mt-12 pt-8 text-center text-gray-400">
+                <p>&copy; 2024 QR Puantaj. Tüm hakları saklıdır.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Button click handlers
+        document.querySelectorAll('button').forEach(button => {
+            button.addEventListener('click', function() {
+                const buttonText = this.textContent.trim();
+                if (buttonText.includes('Demo') || buttonText.includes('Dene') || buttonText.includes('Başla')) {
+                    alert('Demo sayfasına yönlendiriliyorsunuz...');
+                } else if (buttonText.includes('İletişim') || buttonText.includes('Görüş')) {
+                    alert('Satış ekibimiz sizinle iletişime geçecek!');
+                }
+            });
+        });
+
+        // Add scroll effect to navbar
+        window.addEventListener('scroll', function() {
+            const navbar = document.querySelector('nav');
+            if (window.scrollY > 100) {
+                navbar.classList.add('shadow-lg');
+            } else {
+                navbar.classList.remove('shadow-lg');
+            }
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96df10177556db8d',t:'MTc1NDk5MjE2Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

@@ -4,7 +4,7 @@ from django.urls import path,include
 from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
-from core.views import qr_code_image,home,qr_scan,login_view,attendances, calendar_summary, daily_attendance_report,staff_list, staff_create,staff_update,company_qr_code, manual_attendance_entry, employee_monthly_report,leave_request_create,leave_approval_list,leave_approve, ScheduleCreateView, EmployeeScheduleView
+from core.views import qr_code_image,home,qr_scan,login_view,attendances, calendar_summary, daily_attendance_report,staff_list, staff_create,staff_update,company_qr_code, manual_attendance_entry, employee_monthly_report,leave_request_create,leave_approval_list,leave_approve, ScheduleCreateView, EmployeeScheduleView,landing
 from users.views import MyTokenObtainPairView 
 
 
@@ -12,7 +12,8 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('core/', include('core.urls')),
     path('api/', include('attendance.urls')),
-    path('', home, name='home'),
+    path('', landing, name='landing'),
+    path('dashboard/', home, name='home'),
     path('qr-scan/', qr_scan, name='qr_scan'),
     path('login/', login_view, name='login_view'),
     path('company/<int:company_id>/qr_image/', qr_code_image, name='qr_code_image'),

@@ -31,6 +31,10 @@ from .models import QRToken, ShiftSession, Employee, Company, User, Attendance, 
 from django.urls import reverse_lazy
 
 
+def landing(request):
+    context = dict()
+    return render(request,'landing.html',context)
+
 @login_required
 def home(request):
     # Aktif vardiyayı kontrol et
