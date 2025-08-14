@@ -79,15 +79,17 @@ def login_view(request):
 def attendances(request):
     user = request.user
     shifts = ShiftSession.objects.filter(user=user).order_by('date', 'start_time')
-    
-    now_date = timezone.now().date().strftime('%Y-%m-%d')  # Template'e göndereceğimiz
-    
+
+    now_date = timezone.localtime(timezone.now()).date().strftime('%Y-%m-%d')
+
     daily_records = []
     for shift in shifts:
+        local_start = timezone.localtime(shift.start_time)
+        local_end = timezone.localtime(shift.end_time) if shift.end_time else None
         record = {
-            'date': shift.date.strftime('%Y-%m-%d'),
-            'entry': shift.start_time.strftime('%H:%M:%S'),
-            'exit': shift.end_time.strftime('%H:%M:%S') if shift.end_time else None,
+            'date': local_start.date().strftime('%Y-%m-%d'),
+            'entry': local_start.strftime('%H:%M:%S'),
+            'exit': local_end.strftime('%H:%M:%S') if local_end else None,
             'is_overnight': shift.is_overnight,
             'status': 'complete' if shift.end_time else 'incomplete'
         }
@@ -95,7 +97,7 @@ def attendances(request):
 
     context = {
         'daily_records': daily_records,
-        'now_date': now_date  # Template'de kullanılacak
+        'now_date': now_date
     }
     return render(request, 'attendances.html', context)
 

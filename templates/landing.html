@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>QR Puantaj - Akıllı Mesai Takip Sistemi</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; }
@@ -16,6 +17,103 @@
         }
         .feature-card:hover { transform: translateY(-5px); transition: all 0.3s ease; }
         .pricing-card:hover { transform: translateY(-10px); box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
+        
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
+        }
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            padding: 0;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+            animation: modalSlideIn 0.3s ease-out;
+        }
+        @keyframes modalSlideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        .close {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #666;
+            z-index: 1001;
+        }
+        .close:hover {
+            color: #000;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: #000;
+            box-shadow: 0 0 0 3px rgba(0,0,0,0.1);
+        }
+        .btn-submit {
+            width: 100%;
+            background: #000;
+            color: white;
+            padding: 14px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .btn-submit:hover {
+            background: #333;
+            transform: translateY(-1px);
+        }
+        .success-message {
+            display: none;
+            text-align: center;
+            padding: 40px 20px;
+        }
+        .success-icon {
+            width: 64px;
+            height: 64px;
+            background: #10b981;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+        }
     </style>
 </head>
 <body class="bg-white text-gray-900">
@@ -37,12 +135,74 @@
                     <a href="#fiyatlandirma" class="text-gray-600 hover:text-black transition-colors">Fiyatlandırma</a>
                     <a href="#iletisim" class="text-gray-600 hover:text-black transition-colors">İletişim</a>
                 </div>
-                <button class="bg-black text-white px-6 py-2 rounded-lg hover:bg-gray-800 transition-colors">
+                <button id="demoBtn" class="bg-black text-white px-6 py-2 rounded-lg hover:bg-gray-800 transition-colors">
                     Demo İste
                 </button>
             </div>
         </div>
     </nav>
+
+    <!-- Demo Modal -->
+    <div id="demoModal" class="modal">
+        <div class="modal-content">
+            <span class="close" id="closeModal">&times;</span>
+            
+            <!-- Form Content -->
+            <div id="formContent" class="p-8">
+                <div class="text-center mb-6">
+                    <div class="w-16 h-16 bg-black rounded-lg flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M3 3h6v6H3V3zm2 2v2h2V5H5zM3 15h6v6H3v-6zm2 2v2h2v-2H5zM15 3h6v6h-6V3zm2 2v2h2V5h-2z"/>
+                        </svg>
+                    </div>
+                    <h2 class="text-2xl font-bold mb-2">QR Puantaj Demo</h2>
+                    <p class="text-gray-600">Demo linkiniz e-posta adresinize gönderilecek</p>
+                </div>
+                
+                <form id="demoForm">
+                    <div class="form-group">
+                        <input type="text" id="firstName" name="firstName" class="form-control" placeholder="Adınız *" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="text" id="lastName" name="lastName" class="form-control" placeholder="Soyadınız *" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="email" id="email" name="email" class="form-control" placeholder="E-posta Adresiniz *" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="text" id="company" name="company" class="form-control" placeholder="Şirket Adı (Opsiyonel)">
+                    </div>
+                    <div class="form-group">
+                        <div class="g-recaptcha" data-sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"></div>
+                        <div id="captcha-error" class="text-red-500 text-sm mt-1 hidden">Lütfen robot olmadığınızı doğrulayın.</div>
+                    </div>
+                    <button type="submit" class="btn-submit">
+                        Demo Linkini Gönder
+                    </button>
+                </form>
+                
+                <p class="text-xs text-gray-500 text-center mt-4">
+                    * Demo linki 24 saat geçerlidir ve sadece görüntüleme amaçlıdır.
+                </p>
+            </div>
+            
+            <!-- Success Content -->
+            <div id="successContent" class="success-message">
+                <div class="success-icon">
+                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold mb-2">Demo Linki Gönderildi!</h3>
+                <p class="text-gray-600 mb-6">
+                    E-posta adresinizi kontrol edin. Demo linki birkaç dakika içinde ulaşacak.
+                </p>
+                <button id="closeSuccess" class="btn-submit" style="width: auto; padding: 10px 30px;">
+                    Tamam
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- Hero Section -->
     <section class="gradient-bg text-white pt-24 pb-20">
@@ -61,7 +221,7 @@
                         <button class="bg-white text-black px-8 py-4 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
                             Ücretsiz Dene
                         </button>
-                        <button class="border border-white text-white px-8 py-4 rounded-lg font-semibold hover:bg-white hover:text-black transition-colors">
+                        <button id="heroDemoBtn" class="border border-white text-white px-8 py-4 rounded-lg font-semibold hover:bg-white hover:text-black transition-colors">
                             Demo İzle
                         </button>
                     </div>
@@ -380,17 +540,129 @@
                     <ul class="space-y-2 text-gray-400">
                         <li>info@qrpuantaj.com</li>
                         <li>+90 (212) 555 0123</li>
-                        <li>İstanbul, Türkiye</li>
+                        <li>Antalya, Türkiye</li>
                     </ul>
                 </div>
             </div>
             <div class="border-t border-gray-800 mt-12 pt-8 text-center text-gray-400">
-                <p>&copy; 2024 QR Puantaj. Tüm hakları saklıdır.</p>
+                <p>&copy; 2025 QR Puantaj. Tüm hakları saklıdır.</p>
             </div>
         </div>
     </footer>
 
     <script>
+        // Modal functionality
+        const modal = document.getElementById('demoModal');
+        const demoBtn = document.getElementById('demoBtn');
+        const heroDemoBtn = document.getElementById('heroDemoBtn');
+        const closeModal = document.getElementById('closeModal');
+        const closeSuccess = document.getElementById('closeSuccess');
+        const demoForm = document.getElementById('demoForm');
+        const formContent = document.getElementById('formContent');
+        const successContent = document.getElementById('successContent');
+
+        // Open modal
+        function openModal() {
+            modal.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        // Close modal
+        function closeModalFunc() {
+            modal.classList.remove('show');
+            document.body.style.overflow = 'auto';
+            // Reset form
+            demoForm.reset();
+            // Reset captcha
+            if (typeof grecaptcha !== 'undefined') {
+                grecaptcha.reset();
+            }
+            // Hide error message
+            document.getElementById('captcha-error').classList.add('hidden');
+            formContent.style.display = 'block';
+            successContent.style.display = 'none';
+        }
+
+        // Event listeners
+        demoBtn.addEventListener('click', openModal);
+        heroDemoBtn.addEventListener('click', openModal);
+        closeModal.addEventListener('click', closeModalFunc);
+        closeSuccess.addEventListener('click', closeModalFunc);
+
+        // Close modal when clicking outside
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                closeModalFunc();
+            }
+        });
+
+        // Close modal with ESC key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && modal.classList.contains('show')) {
+                closeModalFunc();
+            }
+        });
+
+        // Form submission
+        demoForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Check reCAPTCHA
+            const captchaResponse = grecaptcha.getResponse();
+            const captchaError = document.getElementById('captcha-error');
+            
+            if (!captchaResponse) {
+                captchaError.classList.remove('hidden');
+                return;
+            } else {
+                captchaError.classList.add('hidden');
+            }
+            
+            // Get form data
+            const firstName = document.getElementById('firstName').value;
+            const lastName = document.getElementById('lastName').value;
+            const email = document.getElementById('email').value;
+            const company = document.getElementById('company').value;
+
+            // Here you would normally send data to your backend
+            console.log('Demo request:', { firstName, lastName, email, company, captcha: captchaResponse });
+
+            // Show success message
+            formContent.style.display = 'none';
+            successContent.style.display = 'block';
+
+            // You can add actual API call here:
+            /*
+            fetch('/demo-talep/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    firstName: firstName,
+                    lastName: lastName,
+                    email: email,
+                    company: company,
+                    captcha: captchaResponse
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    formContent.style.display = 'none';
+                    successContent.style.display = 'block';
+                } else {
+                    alert('Bir hata oluştu. Lütfen tekrar deneyin.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Bir hata oluştu. Lütfen tekrar deneyin.');
+            });
+            */
+        });
+
         // Smooth scrolling for navigation links
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
@@ -405,18 +677,6 @@
             });
         });
 
-        // Button click handlers
-        document.querySelectorAll('button').forEach(button => {
-            button.addEventListener('click', function() {
-                const buttonText = this.textContent.trim();
-                if (buttonText.includes('Demo') || buttonText.includes('Dene') || buttonText.includes('Başla')) {
-                    alert('Demo sayfasına yönlendiriliyorsunuz...');
-                } else if (buttonText.includes('İletişim') || buttonText.includes('Görüş')) {
-                    alert('Satış ekibimiz sizinle iletişime geçecek!');
-                }
-            });
-        });
-
         // Add scroll effect to navbar
         window.addEventListener('scroll', function() {
             const navbar = document.querySelector('nav');
@@ -427,5 +687,5 @@
             }
         });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96df10177556db8d',t:'MTc1NDk5MjE2Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</body>
 </html>
